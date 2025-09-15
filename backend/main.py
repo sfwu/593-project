@@ -10,6 +10,7 @@ from config.database import init_db
 from controllers.auth_controller import router as auth_router
 from controllers.student_controller import router as student_router
 from controllers.professor_controller import router as professor_router
+from controllers.course_controller import router as course_router
 
 app = FastAPI(
     title="Academic Information Management System", 
@@ -51,6 +52,13 @@ async def root():
             "POST /auth/register/student - Student registration",
             "POST /auth/register/professor - Professor registration",
             "GET /auth/me - Get current user profile"
+        ],
+        "course_endpoints": [
+            "GET /courses - Browse all courses (role-based filtering)",
+            "GET /courses/{id} - Get course details",
+            "GET /courses/{id}/enrollment - Get enrollment info",
+            "GET /courses/departments/list - List all departments",
+            "GET /courses/semesters/list - List all semesters"
         ]
     }
 
@@ -63,6 +71,7 @@ async def health_check():
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 app.include_router(student_router, prefix="/students", tags=["Students"])
 app.include_router(professor_router, prefix="/professors", tags=["Professors"])
+app.include_router(course_router, prefix="/courses", tags=["Courses"])
 
 if __name__ == "__main__":
     import uvicorn

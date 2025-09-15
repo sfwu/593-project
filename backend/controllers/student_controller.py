@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from config.database import get_db
-from config.auth import get_current_student, get_password_hash
+from config.auth import get_current_student, get_password_hash, verify_password
 from models import Student, Course, Professor, student_course_association, User
 from schemas.student_schemas import (
     StudentUpdate,
@@ -45,7 +45,6 @@ async def change_password(
     db: Session = Depends(get_db)
 ):
     """Change student password"""
-    from config.auth import verify_password
     
     # Get user account
     user = db.query(User).filter(User.id == current_student.user_id).first()

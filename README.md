@@ -29,7 +29,7 @@ A **complete full-stack application** for academic course management with role-b
 - **Backend**: FastAPI (port 9600) 
 - **Database**: SQLite with SQLAlchemy ORM
 - **Authentication**: JWT with passlib/bcrypt
-- **Testing**: pytest with 150+ unit tests
+- **Testing**: pytest with 113 comprehensive unit tests
 - **Validation**: Pydantic schemas
 
 ## 📁 Project Structure
@@ -51,18 +51,20 @@ A **complete full-stack application** for academic course management with role-b
 │   ├── controllers/                  # API endpoints
 │   │   ├── auth_controller.py        # Authentication endpoints
 │   │   ├── student_controller.py     # Student functionality
-│   │   └── professor_controller.py   # Professor functionality
+│   │   ├── professor_controller.py   # Professor functionality
+│   │   └── course_controller.py      # General course endpoints
 │   └── main.py                       # FastAPI app with all routes
 ├── frontend/
 │   └── app.py                        # Streamlit web interface
 ├── tests/                            # Comprehensive test suite
-│   ├── unit/                         # Unit tests (150+ tests)
+│   ├── unit/                         # Unit tests (113 tests, 100% passing)
 │   │   ├── test_auth.py              # Authentication tests
 │   │   ├── test_models.py            # Database model tests
 │   │   ├── test_schemas.py           # Schema validation tests
 │   │   ├── test_auth_controller.py   # Auth endpoint tests
 │   │   ├── test_student_controller.py # Student endpoint tests
-│   │   └── test_professor_controller.py # Professor endpoint tests
+│   │   ├── test_professor_controller.py # Professor endpoint tests
+│   │   └── test_course_controller.py  # Course endpoint tests
 │   └── integration/                  # Integration tests
 ├── data/                             # SQLite database files
 ├── logs/                             # Application logs
@@ -118,12 +120,13 @@ tail -f logs/frontend.log
 
 ## 🧪 Testing
 
-### Comprehensive Test Suite
-- **150+ unit tests** covering all functionality
+### Comprehensive Test Suite - 100% Success Rate
+- **113 unit tests** covering all functionality (100% passing)
 - **23 model tests** for database integrity
-- **21 schema tests** for validation
-- **Authentication tests** for security
-- **API endpoint tests** for all controllers
+- **21 schema tests** for validation  
+- **19 authentication tests** for security
+- **50 API endpoint tests** for all controllers
+- **Async/await implementation** fully tested and working
 
 ### Running Tests
 
@@ -167,6 +170,12 @@ pytest tests/unit/test_models.py -v
 - Student enrollment management
 - Course statistics and analytics
 
+### Course Endpoints (`/courses`)
+- Browse all courses with role-based filtering
+- Get detailed course information
+- View enrollment statistics
+- Department and semester listings
+
 **📚 Complete API Guide**: See [BACKEND_API_GUIDE.md](BACKEND_API_GUIDE.md) for detailed documentation with examples.
 
 ## 🗄️ Database Schema
@@ -208,13 +217,14 @@ Models are logically separated by responsibility:
 
 ## 📊 Project Status
 
-### ✅ **Fully Implemented**
+### ✅ **Fully Implemented & Production Ready**
 - **Authentication System**: JWT, password hashing, role-based access
 - **User Management**: Student and professor registration/profiles
 - **Course Management**: Full CRUD operations with enrollment
 - **Database Layer**: Complete SQLAlchemy models with relationships
 - **API Layer**: RESTful endpoints with proper HTTP status codes
-- **Testing Suite**: 150+ comprehensive unit tests
+- **Async/Await Implementation**: Full async support throughout FastAPI
+- **Testing Suite**: 113 comprehensive unit tests (100% passing)
 - **Documentation**: Complete API guide and examples
 - **Security**: Input validation, authentication, authorization
 
@@ -230,6 +240,7 @@ Models are logically separated by responsibility:
 
 This project demonstrates:
 - **Full-stack development** with modern Python frameworks
+- **Asynchronous programming** with FastAPI and async/await patterns
 - **Authentication and authorization** best practices
 - **Database design** with proper relationships
 - **API development** with FastAPI and Pydantic

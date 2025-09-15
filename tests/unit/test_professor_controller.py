@@ -3,6 +3,7 @@ Unit Tests for Professor Controller
 Tests professor profile management and course administration functionality
 """
 import pytest
+import pytest_asyncio
 from unittest.mock import Mock, patch
 from fastapi import HTTPException
 import sys
@@ -23,7 +24,8 @@ from models import Professor, Course, Student, User
 class TestProfessorProfileManagement:
     """Unit tests for professor profile management"""
     
-    def test_update_professor_profile_success(self):
+    @pytest.mark.asyncio
+    async def test_update_professor_profile_success(self):
         """Test successful professor profile update"""
         # Mock current professor
         mock_professor = Mock()
@@ -44,7 +46,7 @@ class TestProfessorProfileManagement:
         )
         
         # Call update function
-        result = update_professor_profile(update_data, mock_professor, mock_db)
+        result = await update_professor_profile(update_data, mock_professor, mock_db)
         
         # Assertions
         assert mock_professor.office_hours == "TTH 1-3 PM"
@@ -57,7 +59,8 @@ class TestProfessorProfileManagement:
     
     @patch('controllers.professor_controller.verify_password')
     @patch('controllers.professor_controller.get_password_hash')
-    def test_change_password_success(self, mock_hash_password, mock_verify_password):
+    @pytest.mark.asyncio
+    async def test_change_password_success(self, mock_hash_password, mock_verify_password):
         """Test successful password change"""
         # Mock password verification and hashing
         mock_verify_password.return_value = True
@@ -76,7 +79,7 @@ class TestProfessorProfileManagement:
         mock_db.commit = Mock()
         
         # Call change password function
-        result = change_password("old_password", "new_password", mock_professor, mock_db)
+        result = await change_password("old_password", "new_password", mock_professor, mock_db)
         
         # Assertions
         assert result["message"] == "Password updated successfully"
@@ -89,7 +92,8 @@ class TestProfessorProfileManagement:
 class TestTeachingLoad:
     """Unit tests for teaching load functionality"""
     
-    def test_get_teaching_load_success(self):
+    @pytest.mark.asyncio
+    async def test_get_teaching_load_success(self):
         """Test getting teaching load"""
         # Mock courses
         mock_course1 = Mock()
@@ -128,7 +132,7 @@ class TestTeachingLoad:
         mock_db.query.return_value.filter.return_value.count.side_effect = [20, 15]
         
         # Call teaching load function
-        result = get_teaching_load(
+        result = await get_teaching_load(
             semester="Fall 2024",
             year=2024,
             current_professor=mock_professor,
@@ -147,7 +151,8 @@ class TestTeachingLoad:
 class TestCourseCreation:
     """Unit tests for course creation"""
     
-    def test_create_course_success(self):
+    @pytest.mark.asyncio
+    async def test_create_course_success(self):
         """Test successful course creation"""
         # Mock current professor
         mock_professor = Mock()
@@ -185,14 +190,15 @@ class TestCourseCreation:
         )
         
         # Call create course function
-        result = create_course(course_data, mock_professor, mock_db)
+        result = await create_course(course_data, mock_professor, mock_db)
         
         # Assertions
         mock_db.add.assert_called_once()
         mock_db.commit.assert_called_once()
         mock_db.refresh.assert_called_once()
     
-    def test_create_course_duplicate(self):
+    @pytest.mark.asyncio
+    async def test_create_course_duplicate(self):
         """Test course creation with duplicate course code"""
         # Mock existing course
         mock_existing_course = Mock()
@@ -216,7 +222,7 @@ class TestCourseCreation:
         
         # Call create course function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            create_course(course_data, mock_professor, mock_db)
+            await create_course(course_data, mock_professor, mock_db)
         
         assert exc_info.value.status_code == 400
         assert "Course with this code already exists" in exc_info.value.detail
@@ -224,7 +230,8 @@ class TestCourseCreation:
 class TestCourseManagement:
     """Unit tests for course management"""
     
-    def test_get_professor_courses_success(self):
+    @pytest.mark.asyncio
+    async def test_get_professor_courses_success(self):
         """Test getting professor's courses"""
         # Mock courses
         mock_course1 = Mock()
@@ -255,7 +262,7 @@ class TestCourseManagement:
         mock_db.query.return_value.filter.return_value.count.return_value = 25
         
         # Call function
-        result = get_professor_courses(
+        result = await get_professor_courses(
             semester="Fall 2024",
             year=2024,
             include_inactive=False,
@@ -268,7 +275,8 @@ class TestCourseManagement:
         assert result[0]["course_code"] == "CS101"
         assert result[0]["enrolled_count"] == 25
     
-    def test_update_course_success(self):
+    @pytest.mark.asyncio
+    async def test_update_course_success(self):
         """Test successful course update"""
         # Mock course owned by professor
         mock_course = Mock()
@@ -295,7 +303,7 @@ class TestCourseManagement:
         )
         
         # Call update function
-        result = update_course(1, update_data, mock_professor, mock_db)
+        result = await update_course(1, update_data, mock_professor, mock_db)
         
         # Assertions
         assert mock_course.title == "New Title"
@@ -303,7 +311,8 @@ class TestCourseManagement:
         mock_db.commit.assert_called_once()
         mock_db.refresh.assert_called_once()
     
-    def test_update_course_not_owned(self):
+    @pytest.mark.asyncio
+    async def test_update_course_not_owned(self):
         """Test course update when course is not owned by professor"""
         # Mock current professor
         mock_professor = Mock()
@@ -318,12 +327,13 @@ class TestCourseManagement:
         
         # Call update function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            update_course(1, update_data, mock_professor, mock_db)
+            await update_course(1, update_data, mock_professor, mock_db)
         
         assert exc_info.value.status_code == 404
         assert "Course not found or you don't have permission" in exc_info.value.detail
     
-    def test_delete_course_success(self):
+    @pytest.mark.asyncio
+    async def test_delete_course_success(self):
         """Test successful course deletion (deactivation)"""
         # Mock course with no enrolled students
         mock_course = Mock()
@@ -342,14 +352,15 @@ class TestCourseManagement:
         mock_db.commit = Mock()
         
         # Call delete function
-        result = delete_course(1, mock_professor, mock_db)
+        result = await delete_course(1, mock_professor, mock_db)
         
         # Assertions
         assert result["message"] == "Course deactivated successfully"
         assert mock_course.is_active is False
         mock_db.commit.assert_called_once()
     
-    def test_delete_course_with_students(self):
+    @pytest.mark.asyncio
+    async def test_delete_course_with_students(self):
         """Test course deletion with enrolled students"""
         # Mock course with enrolled students
         mock_course = Mock()
@@ -367,7 +378,7 @@ class TestCourseManagement:
         
         # Call delete function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            delete_course(1, mock_professor, mock_db)
+            await delete_course(1, mock_professor, mock_db)
         
         assert exc_info.value.status_code == 400
         assert "Cannot delete course with enrolled students" in exc_info.value.detail
@@ -375,7 +386,8 @@ class TestCourseManagement:
 class TestEnrollmentManagement:
     """Unit tests for enrollment management"""
     
-    def test_get_course_students_success(self):
+    @pytest.mark.asyncio
+    async def test_get_course_students_success(self):
         """Test getting students enrolled in course"""
         # Mock course
         mock_course = Mock()
@@ -408,7 +420,7 @@ class TestEnrollmentManagement:
         mock_db.query.return_value.join.return_value.filter.return_value.all.return_value = [mock_student1]
         
         # Call function
-        result = get_course_students(1, mock_professor, mock_db)
+        result = await get_course_students(1, mock_professor, mock_db)
         
         # Assertions
         assert result["course_code"] == "CS101"
@@ -416,7 +428,8 @@ class TestEnrollmentManagement:
         assert result["enrolled_count"] == 1
         assert result["enrolled_students"][0] == mock_student1
     
-    def test_remove_student_from_course_success(self):
+    @pytest.mark.asyncio
+    async def test_remove_student_from_course_success(self):
         """Test successful student removal from course"""
         # Mock course
         mock_course = Mock()
@@ -437,14 +450,15 @@ class TestEnrollmentManagement:
         mock_db.commit = Mock()
         
         # Call function
-        result = remove_student_from_course(1, 1, mock_professor, mock_db)
+        result = await remove_student_from_course(1, 1, mock_professor, mock_db)
         
         # Assertions
         assert result["message"] == "Student removed from course successfully"
         mock_db.execute.assert_called_once()
         mock_db.commit.assert_called_once()
     
-    def test_remove_student_not_enrolled(self):
+    @pytest.mark.asyncio
+    async def test_remove_student_not_enrolled(self):
         """Test removing student who is not enrolled"""
         # Mock course
         mock_course = Mock()
@@ -461,7 +475,7 @@ class TestEnrollmentManagement:
         
         # Call function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            remove_student_from_course(1, 1, mock_professor, mock_db)
+            await remove_student_from_course(1, 1, mock_professor, mock_db)
         
         assert exc_info.value.status_code == 404
         assert "Student not enrolled in this course" in exc_info.value.detail
@@ -469,7 +483,8 @@ class TestEnrollmentManagement:
 class TestEnrollmentStatistics:
     """Unit tests for enrollment statistics"""
     
-    def test_get_course_enrollment_stats_success(self):
+    @pytest.mark.asyncio
+    async def test_get_course_enrollment_stats_success(self):
         """Test getting course enrollment statistics"""
         # Mock course
         mock_course = Mock()
@@ -502,7 +517,7 @@ class TestEnrollmentStatistics:
         ]
         
         # Call function
-        result = get_course_enrollment_stats(1, mock_professor, mock_db)
+        result = await get_course_enrollment_stats(1, mock_professor, mock_db)
         
         # Assertions
         assert result["course_code"] == "CS101"

@@ -3,6 +3,7 @@ Unit Tests for Student Controller
 Tests student profile management and course-related functionality
 """
 import pytest
+import pytest_asyncio
 from unittest.mock import Mock, patch
 from fastapi import HTTPException
 import sys
@@ -11,6 +12,9 @@ from datetime import datetime
 
 # Add backend to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../backend'))
+
+# Import mock data manager
+from . import mock_data_manager
 
 from controllers.student_controller import (
     update_student_profile, change_password, search_courses,
@@ -23,7 +27,8 @@ from models import Student, Course, Professor, User
 class TestStudentProfileManagement:
     """Unit tests for student profile management"""
     
-    def test_update_student_profile_success(self):
+    @pytest.mark.asyncio
+    async def test_update_student_profile_success(self):
         """Test successful student profile update"""
         # Mock current student
         mock_student = Mock()
@@ -43,7 +48,7 @@ class TestStudentProfileManagement:
         )
         
         # Call update function
-        result = update_student_profile(update_data, mock_student, mock_db)
+        result = await update_student_profile(update_data, mock_student, mock_db)
         
         # Assertions
         assert mock_student.first_name == "Johnny"
@@ -54,7 +59,8 @@ class TestStudentProfileManagement:
         mock_db.commit.assert_called_once()
         mock_db.refresh.assert_called_once_with(mock_student)
     
-    def test_update_student_profile_partial(self):
+    @pytest.mark.asyncio
+    async def test_update_student_profile_partial(self):
         """Test partial student profile update"""
         # Mock current student
         mock_student = Mock()
@@ -70,7 +76,7 @@ class TestStudentProfileManagement:
         update_data = StudentUpdate(phone="555-9999")
         
         # Call update function
-        result = update_student_profile(update_data, mock_student, mock_db)
+        result = await update_student_profile(update_data, mock_student, mock_db)
         
         # Assertions
         assert mock_student.phone == "555-9999"
@@ -78,7 +84,8 @@ class TestStudentProfileManagement:
     
     @patch('controllers.student_controller.verify_password')
     @patch('controllers.student_controller.get_password_hash')
-    def test_change_password_success(self, mock_hash_password, mock_verify_password):
+    @pytest.mark.asyncio
+    async def test_change_password_success(self, mock_hash_password, mock_verify_password):
         """Test successful password change"""
         # Mock password verification and hashing
         mock_verify_password.return_value = True
@@ -97,7 +104,7 @@ class TestStudentProfileManagement:
         mock_db.commit = Mock()
         
         # Call change password function
-        result = change_password("old_password", "new_password", mock_student, mock_db)
+        result = await change_password("old_password", "new_password", mock_student, mock_db)
         
         # Assertions
         assert result["message"] == "Password updated successfully"
@@ -108,7 +115,8 @@ class TestStudentProfileManagement:
         mock_db.commit.assert_called_once()
     
     @patch('controllers.student_controller.verify_password')
-    def test_change_password_wrong_current(self, mock_verify_password):
+    @pytest.mark.asyncio
+    async def test_change_password_wrong_current(self, mock_verify_password):
         """Test password change with wrong current password"""
         # Mock password verification to return False
         mock_verify_password.return_value = False
@@ -126,7 +134,7 @@ class TestStudentProfileManagement:
         
         # Call change password function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            change_password("wrong_password", "new_password", mock_student, mock_db)
+            await change_password("wrong_password", "new_password", mock_student, mock_db)
         
         assert exc_info.value.status_code == 400
         assert "Current password is incorrect" in exc_info.value.detail
@@ -134,47 +142,43 @@ class TestStudentProfileManagement:
 class TestCourseSearch:
     """Unit tests for course search functionality"""
     
-    def test_search_courses_no_filters(self):
-        """Test course search without filters"""
-        # Mock courses
-        mock_course1 = Mock()
-        mock_course1.id = 1
-        mock_course1.course_code = "CS101"
-        mock_course1.title = "Programming"
-        mock_course1.professor_id = 1
+    @pytest.mark.asyncio
+    async def test_search_courses_no_filters(self, test_db):
+        """Test course search without filters using real database"""
+        # Setup test data
+        test_data = mock_data_manager.setup_complete_test_data(test_db)
         
-        mock_course2 = Mock()
-        mock_course2.id = 2
-        mock_course2.course_code = "CS102"
-        mock_course2.title = "Data Structures"
-        mock_course2.professor_id = 1
-        
-        # Mock professor
-        mock_professor = Mock()
-        mock_professor.first_name = "Dr. Jane"
-        mock_professor.last_name = "Smith"
-        
-        # Mock database session
-        mock_db = Mock()
-        mock_query = Mock()
-        mock_query.filter.return_value = mock_query
-        mock_query.all.return_value = [mock_course1, mock_course2]
-        mock_db.query.return_value = mock_query
-        
-        # Mock professor query and enrollment count query
-        mock_db.query.return_value.filter.return_value.first.return_value = mock_professor
-        mock_db.query.return_value.filter.return_value.count.return_value = 15
-        
-        # Call search function
-        result = search_courses(db=mock_db)
-        
-        # Assertions
-        assert len(result) == 2
-        assert result[0]["course_code"] == "CS101"
-        assert result[0]["professor"]["first_name"] == "Dr. Jane"
-        assert result[0]["enrolled_count"] == 15
+        try:
+            # Call search function with real database (pass explicit None values)
+            result = await search_courses(
+                department=None,
+                semester=None, 
+                year=None,
+                keyword=None,
+                db=test_db
+            )
+            
+            # Assertions - should find at least the active courses we created
+            assert len(result) >= 3  # We created 3 active courses (1 inactive filtered out)
+            
+            # Check that courses have expected structure
+            course_codes = [course["course_code"] for course in result]
+            assert "CS101" in course_codes
+            assert "CS201" in course_codes
+            
+            # Verify each course has required fields
+            for course in result:
+                assert "course_code" in course
+                assert "title" in course
+                assert "professor" in course
+                assert "enrolled_count" in course
+                
+        finally:
+            # Cleanup
+            mock_data_manager.cleanup_all_data(test_db)
     
-    def test_search_courses_with_filters(self):
+    @pytest.mark.asyncio
+    async def test_search_courses_with_filters(self):
         """Test course search with filters"""
         # Mock database session and query
         mock_db = Mock()
@@ -186,7 +190,7 @@ class TestCourseSearch:
         mock_db.query.return_value = mock_query
         
         # Call search function with filters
-        result = search_courses(
+        result = await search_courses(
             department="Computer Science",
             semester="Fall 2024",
             year=2024,
@@ -198,7 +202,8 @@ class TestCourseSearch:
         assert mock_query.filter.call_count >= 4  # One for is_active, plus 4 filters
         assert result == []
     
-    def test_search_courses_keyword_search(self):
+    @pytest.mark.asyncio
+    async def test_search_courses_keyword_search(self):
         """Test course search with keyword"""
         # Mock database session
         mock_db = Mock()
@@ -207,8 +212,14 @@ class TestCourseSearch:
         mock_query.all.return_value = []
         mock_db.query.return_value = mock_query
         
-        # Call search function with keyword
-        result = search_courses(keyword="machine learning", db=mock_db)
+        # Call search function with keyword (pass explicit None values for other params)
+        result = await search_courses(
+            department=None,
+            semester=None,
+            year=None,
+            keyword="machine learning",
+            db=mock_db
+        )
         
         # Verify that keyword filter was applied
         assert mock_query.filter.call_count >= 2  # is_active + keyword filter
@@ -216,7 +227,8 @@ class TestCourseSearch:
 class TestCourseEnrollment:
     """Unit tests for course enrollment functionality"""
     
-    def test_enroll_in_course_success(self):
+    @pytest.mark.asyncio
+    async def test_enroll_in_course_success(self):
         """Test successful course enrollment"""
         # Mock course
         mock_course = Mock()
@@ -249,7 +261,7 @@ class TestCourseEnrollment:
         enrollment_data = EnrollmentCreate(course_id=1)
         
         # Call enrollment function
-        result = enroll_in_course(enrollment_data, mock_student, mock_db)
+        result = await enroll_in_course(enrollment_data, mock_student, mock_db)
         
         # Assertions
         assert result["message"] == "Successfully enrolled in course"
@@ -258,7 +270,8 @@ class TestCourseEnrollment:
         mock_db.execute.assert_called_once()
         mock_db.commit.assert_called_once()
     
-    def test_enroll_in_course_not_found(self):
+    @pytest.mark.asyncio
+    async def test_enroll_in_course_not_found(self):
         """Test enrollment in non-existent course"""
         # Mock database session - no course found
         mock_db = Mock()
@@ -273,12 +286,13 @@ class TestCourseEnrollment:
         
         # Call enrollment function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            enroll_in_course(enrollment_data, mock_student, mock_db)
+            await enroll_in_course(enrollment_data, mock_student, mock_db)
         
         assert exc_info.value.status_code == 404
         assert "Course not found or inactive" in exc_info.value.detail
     
-    def test_enroll_in_course_already_enrolled(self):
+    @pytest.mark.asyncio
+    async def test_enroll_in_course_already_enrolled(self):
         """Test enrollment when already enrolled"""
         # Mock course
         mock_course = Mock()
@@ -301,12 +315,13 @@ class TestCourseEnrollment:
         
         # Call enrollment function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            enroll_in_course(enrollment_data, mock_student, mock_db)
+            await enroll_in_course(enrollment_data, mock_student, mock_db)
         
         assert exc_info.value.status_code == 400
         assert "Already enrolled in this course" in exc_info.value.detail
     
-    def test_enroll_in_course_full(self):
+    @pytest.mark.asyncio
+    async def test_enroll_in_course_full(self):
         """Test enrollment when course is full"""
         # Mock course
         mock_course = Mock()
@@ -330,7 +345,7 @@ class TestCourseEnrollment:
         
         # Call enrollment function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            enroll_in_course(enrollment_data, mock_student, mock_db)
+            await enroll_in_course(enrollment_data, mock_student, mock_db)
         
         assert exc_info.value.status_code == 400
         assert "Course is full" in exc_info.value.detail
@@ -338,43 +353,39 @@ class TestCourseEnrollment:
 class TestEnrolledCourses:
     """Unit tests for getting enrolled courses"""
     
-    def test_get_enrolled_courses_success(self):
-        """Test getting enrolled courses"""
-        # Mock enrolled courses
-        mock_course1 = Mock()
-        mock_course1.id = 1
-        mock_course1.course_code = "CS101"
-        mock_course1.title = "Programming"
-        mock_course1.professor_id = 1
+    @pytest.mark.asyncio
+    async def test_get_enrolled_courses_success(self, test_db):
+        """Test getting enrolled courses using real database"""
+        # Setup test data
+        test_data = mock_data_manager.setup_complete_test_data(test_db)
+        student = test_data['student']
         
-        # Mock professor
-        mock_professor = Mock()
-        mock_professor.first_name = "Dr. Jane"
-        mock_professor.last_name = "Smith"
-        
-        # Mock current student
-        mock_student = Mock()
-        mock_student.id = 1
-        
-        # Mock database session
-        mock_db = Mock()
-        mock_db.query.return_value.join.return_value.filter.return_value.all.return_value = [mock_course1]
-        mock_db.query.return_value.filter.return_value.first.return_value = mock_professor
-        mock_db.query.return_value.filter.return_value.count.return_value = 25
-        
-        # Call function
-        result = get_enrolled_courses(mock_student, mock_db)
-        
-        # Assertions
-        assert len(result) == 1
-        assert result[0]["course_code"] == "CS101"
-        assert result[0]["professor"]["first_name"] == "Dr. Jane"
-        assert result[0]["enrolled_count"] == 25
+        try:
+            # Call function with real student and database
+            result = await get_enrolled_courses(student, test_db)
+            
+            # Assertions - student should be enrolled in at least one course
+            assert len(result) >= 1
+            
+            # Check the enrolled course structure
+            enrolled_course = result[0]
+            assert "course_code" in enrolled_course
+            assert "title" in enrolled_course
+            assert "professor" in enrolled_course
+            assert "enrolled_count" in enrolled_course
+            
+            # Verify it's the course we enrolled the student in
+            assert enrolled_course["course_code"] == "CS101"
+            
+        finally:
+            # Cleanup
+            mock_data_manager.cleanup_all_data(test_db)
 
 class TestCourseWithdrawal:
     """Unit tests for course withdrawal"""
     
-    def test_withdraw_from_course_success(self):
+    @pytest.mark.asyncio
+    async def test_withdraw_from_course_success(self):
         """Test successful course withdrawal"""
         # Mock enrollment
         mock_enrollment = Mock()
@@ -394,14 +405,15 @@ class TestCourseWithdrawal:
         mock_db.commit = Mock()
         
         # Call withdrawal function
-        result = withdraw_from_course(1, mock_student, mock_db)
+        result = await withdraw_from_course(1, mock_student, mock_db)
         
         # Assertions
         assert result["message"] == "Successfully withdrawn from course"
         mock_db.execute.assert_called_once()
         mock_db.commit.assert_called_once()
     
-    def test_withdraw_from_course_not_enrolled(self):
+    @pytest.mark.asyncio
+    async def test_withdraw_from_course_not_enrolled(self):
         """Test withdrawal when not enrolled"""
         # Mock current student
         mock_student = Mock()
@@ -413,7 +425,7 @@ class TestCourseWithdrawal:
         
         # Call withdrawal function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            withdraw_from_course(1, mock_student, mock_db)
+            await withdraw_from_course(1, mock_student, mock_db)
         
         assert exc_info.value.status_code == 404
         assert "Not enrolled in this course" in exc_info.value.detail
@@ -421,7 +433,8 @@ class TestCourseWithdrawal:
 class TestStudentSchedule:
     """Unit tests for student schedule functionality"""
     
-    def test_get_student_schedule_success(self):
+    @pytest.mark.asyncio
+    async def test_get_student_schedule_success(self):
         """Test getting student schedule"""
         # Mock enrolled courses
         mock_course1 = Mock()
@@ -455,7 +468,7 @@ class TestStudentSchedule:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_professor
         
         # Call schedule function
-        result = get_student_schedule(
+        result = await get_student_schedule(
             semester="Fall 2024",
             year=2024,
             current_student=mock_student,

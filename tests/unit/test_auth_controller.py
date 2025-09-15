@@ -3,6 +3,7 @@ Unit Tests for Authentication Controller
 Tests login, registration, and authentication endpoints
 """
 import pytest
+import pytest_asyncio
 from unittest.mock import Mock, patch
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
@@ -26,7 +27,8 @@ class TestAuthController:
     
     @patch('controllers.auth_controller.authenticate_user')
     @patch('controllers.auth_controller.create_access_token')
-    def test_login_success(self, mock_create_token, mock_authenticate):
+    @pytest.mark.asyncio
+    async def test_login_success(self, mock_create_token, mock_authenticate):
         """Test successful login"""
         # Mock user
         mock_user = Mock()
@@ -47,7 +49,7 @@ class TestAuthController:
         login_request = UserLogin(email="test@example.com", password="password123")
         
         # Call login function
-        result = login(login_request, mock_db)
+        result = await login(login_request, mock_db)
         
         # Assertions
         assert result["access_token"] == "fake.jwt.token"
@@ -59,7 +61,8 @@ class TestAuthController:
         mock_create_token.assert_called_once()
     
     @patch('controllers.auth_controller.authenticate_user')
-    def test_login_invalid_credentials(self, mock_authenticate):
+    @pytest.mark.asyncio
+    async def test_login_invalid_credentials(self, mock_authenticate):
         """Test login with invalid credentials"""
         # Mock authenticate_user to return False
         mock_authenticate.return_value = False
@@ -72,7 +75,7 @@ class TestAuthController:
         
         # Call login function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            login(login_request, mock_db)
+            await login(login_request, mock_db)
         
         assert exc_info.value.status_code == 401
         assert "Incorrect email or password" in exc_info.value.detail
@@ -81,7 +84,8 @@ class TestStudentRegistration:
     """Unit tests for student registration"""
     
     @patch('controllers.auth_controller.get_password_hash')
-    def test_register_student_success(self, mock_hash_password):
+    @pytest.mark.asyncio
+    async def test_register_student_success(self, mock_hash_password):
         """Test successful student registration"""
         # Mock password hashing
         mock_hash_password.return_value = "hashed_password"
@@ -113,7 +117,7 @@ class TestStudentRegistration:
         )
         
         # Call registration function
-        result = register_student(student_data, mock_db)
+        result = await register_student(student_data, mock_db)
         
         # Assertions
         assert result["message"] == "Student registered successfully"
@@ -124,7 +128,8 @@ class TestStudentRegistration:
         assert mock_db.commit.call_count == 2
         mock_hash_password.assert_called_once_with("password123")
     
-    def test_register_student_existing_email(self):
+    @pytest.mark.asyncio
+    async def test_register_student_existing_email(self):
         """Test student registration with existing email"""
         # Mock database session with existing user
         mock_existing_user = Mock()
@@ -142,12 +147,13 @@ class TestStudentRegistration:
         
         # Call registration function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            register_student(student_data, mock_db)
+            await register_student(student_data, mock_db)
         
         assert exc_info.value.status_code == 400
         assert "Email already registered" in exc_info.value.detail
     
-    def test_register_student_existing_student_id(self):
+    @pytest.mark.asyncio
+    async def test_register_student_existing_student_id(self):
         """Test student registration with existing student ID"""
         # Mock database session
         mock_db = Mock()
@@ -167,7 +173,7 @@ class TestStudentRegistration:
         
         # Call registration function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            register_student(student_data, mock_db)
+            await register_student(student_data, mock_db)
         
         assert exc_info.value.status_code == 400
         assert "Student ID already registered" in exc_info.value.detail
@@ -176,7 +182,8 @@ class TestProfessorRegistration:
     """Unit tests for professor registration"""
     
     @patch('controllers.auth_controller.get_password_hash')
-    def test_register_professor_success(self, mock_hash_password):
+    @pytest.mark.asyncio
+    async def test_register_professor_success(self, mock_hash_password):
         """Test successful professor registration"""
         # Mock password hashing
         mock_hash_password.return_value = "hashed_password"
@@ -209,7 +216,7 @@ class TestProfessorRegistration:
         )
         
         # Call registration function
-        result = register_professor(professor_data, mock_db)
+        result = await register_professor(professor_data, mock_db)
         
         # Assertions
         assert result["message"] == "Professor registered successfully"
@@ -220,7 +227,8 @@ class TestProfessorRegistration:
         assert mock_db.commit.call_count == 2
         mock_hash_password.assert_called_once_with("password123")
     
-    def test_register_professor_existing_professor_id(self):
+    @pytest.mark.asyncio
+    async def test_register_professor_existing_professor_id(self):
         """Test professor registration with existing professor ID"""
         # Mock database session
         mock_db = Mock()
@@ -241,7 +249,7 @@ class TestProfessorRegistration:
         
         # Call registration function and expect HTTPException
         with pytest.raises(HTTPException) as exc_info:
-            register_professor(professor_data, mock_db)
+            await register_professor(professor_data, mock_db)
         
         assert exc_info.value.status_code == 400
         assert "Professor ID already registered" in exc_info.value.detail
@@ -249,7 +257,8 @@ class TestProfessorRegistration:
 class TestProfileEndpoints:
     """Unit tests for profile endpoints"""
     
-    def test_get_current_user_profile(self):
+    @pytest.mark.asyncio
+    async def test_get_current_user_profile(self):
         """Test getting current user profile"""
         # Mock current user
         mock_user = Mock()
@@ -259,11 +268,12 @@ class TestProfileEndpoints:
         mock_user.is_active = True
         mock_user.created_at = datetime.now()
         
-        result = get_current_user_profile(mock_user)
+        result = await get_current_user_profile(mock_user)
         
         assert result == mock_user
     
-    def test_get_current_student_profile(self):
+    @pytest.mark.asyncio
+    async def test_get_current_student_profile(self):
         """Test getting current student profile"""
         # Mock current student
         mock_student = Mock()
@@ -272,11 +282,12 @@ class TestProfileEndpoints:
         mock_student.first_name = "John"
         mock_student.last_name = "Doe"
         
-        result = get_current_student_profile(mock_student)
+        result = await get_current_student_profile(mock_student)
         
         assert result == mock_student
     
-    def test_get_current_professor_profile(self):
+    @pytest.mark.asyncio
+    async def test_get_current_professor_profile(self):
         """Test getting current professor profile"""
         # Mock current professor
         mock_professor = Mock()
@@ -286,7 +297,7 @@ class TestProfileEndpoints:
         mock_professor.last_name = "Smith"
         mock_professor.department = "Computer Science"
         
-        result = get_current_professor_profile(mock_professor)
+        result = await get_current_professor_profile(mock_professor)
         
         assert result == mock_professor
 
@@ -296,7 +307,8 @@ class TestAuthControllerIntegration:
     @patch('controllers.auth_controller.authenticate_user')
     @patch('controllers.auth_controller.create_access_token')
     @patch('controllers.auth_controller.ACCESS_TOKEN_EXPIRE_MINUTES', 30)
-    def test_login_token_expiry(self, mock_create_token, mock_authenticate):
+    @pytest.mark.asyncio
+    async def test_login_token_expiry(self, mock_create_token, mock_authenticate):
         """Test that login creates token with correct expiry"""
         from datetime import timedelta
         
@@ -313,7 +325,7 @@ class TestAuthControllerIntegration:
         login_request = UserLogin(email="test@example.com", password="password123")
         
         # Call login
-        result = login(login_request, mock_db)
+        result = await login(login_request, mock_db)
         
         # Verify create_access_token was called with correct parameters
         mock_create_token.assert_called_once()
