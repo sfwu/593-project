@@ -7,7 +7,7 @@ import pandas as pd
 from typing import Dict, Any
 
 # Configuration
-API_BASE_URL = "http://localhost:9100"
+API_BASE_URL = "http://localhost:9600"
 
 def main():
     """Main Streamlit application"""

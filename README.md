@@ -5,8 +5,8 @@ A **Hello World** project for software development and testing course, focusing 
 ## Tech Stack
 
 - **Language**: Python 3.12
-- **Frontend**: Streamlit (port 9200)
-- **Backend**: FastAPI (port 9100) 
+- **Frontend**: Streamlit (port 9700)
+- **Backend**: FastAPI (port 9600) 
 - **Database**: SQLite
 - **Testing**: pytest (Unit + Integration)
 
@@ -46,9 +46,9 @@ pip install -r requirements.txt
 ```
 
 **URLs:**
-- Frontend: http://localhost:9200
-- Backend API: http://localhost:9100
-- API Docs: http://localhost:9100/docs
+- Frontend: http://localhost:9700
+- Backend API: http://localhost:9600
+- API Docs: http://localhost:9600/docs
 
 ## Current Status
 

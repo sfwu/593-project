@@ -189,9 +189,9 @@ Many-to-many relationship between students and courses
    ```
 
 3. **Access the API**:
-   - Server runs on `http://localhost:9100`
-   - API documentation: `http://localhost:9100/docs`
-   - Alternative docs: `http://localhost:9100/redoc`
+   - Server runs on `http://localhost:9600`
+   - API documentation: `http://localhost:9600/docs`
+   - Alternative docs: `http://localhost:9600/redoc`
 
 ## Authentication Usage
 
@@ -235,12 +235,12 @@ Use tools like:
 Example curl command:
 ```bash
 # Login
-curl -X POST "http://localhost:9100/auth/login" \
+curl -X POST "http://localhost:9600/auth/login" \
      -H "Content-Type: application/json" \
      -d '{"email": "student@example.com", "password": "password123"}'
 
 # Search courses (with token)
-curl -X GET "http://localhost:9100/students/courses/search?department=Computer%20Science" \
+curl -X GET "http://localhost:9600/students/courses/search?department=Computer%20Science" \
      -H "Authorization: Bearer <your-jwt-token>"
 ```
 

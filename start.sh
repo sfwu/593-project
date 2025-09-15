@@ -19,8 +19,8 @@ else
     BACKEND_PID=$!
     echo $BACKEND_PID > .backend.pid
     echo "   ✅ Backend started (PID: $BACKEND_PID)"
-    echo "   📊 API: http://localhost:9100"
-    echo "   📚 Docs: http://localhost:9100/docs"
+    echo "   📊 API: http://localhost:9600"
+    echo "   📚 Docs: http://localhost:9600/docs"
     echo "   📋 Logs: logs/backend.log"
 fi
 
@@ -36,7 +36,7 @@ else
     FRONTEND_PID=$!
     echo $FRONTEND_PID > .frontend.pid
     echo "   ✅ Frontend started (PID: $FRONTEND_PID)"
-    echo "   🌐 Web UI: http://localhost:9200"
+    echo "   🌐 Web UI: http://localhost:9700"
     echo "   📋 Logs: logs/frontend.log"
 fi
 
@@ -44,9 +44,9 @@ echo ""
 echo "🎉 Academic Management System is running!"
 echo ""
 echo "📱 Quick Links:"
-echo "   • Frontend: http://localhost:9200"
-echo "   • Backend API: http://localhost:9100"
-echo "   • API Documentation: http://localhost:9100/docs"
+echo "   • Frontend: http://localhost:9700"
+echo "   • Backend API: http://localhost:9600"
+echo "   • API Documentation: http://localhost:9600/docs"
 echo ""
 echo "📋 Management:"
 echo "   • View logs: tail -f logs/backend.log"

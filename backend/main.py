@@ -66,4 +66,4 @@ app.include_router(professor_router, prefix="/professors", tags=["Professors"])
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=9100)
+    uvicorn.run(app, host="0.0.0.0", port=9600)
