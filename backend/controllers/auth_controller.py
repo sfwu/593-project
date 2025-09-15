@@ -14,7 +14,7 @@ from config.auth import (
     get_current_professor,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
-from models.student import User, Student, Professor, UserRole
+from models import User, Student, Professor, UserRole
 from schemas.student_schemas import (
     UserLogin, 
     Token, 

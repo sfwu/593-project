@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from config.database import get_db
 from config.auth import get_current_professor, get_password_hash
-from models.student import Professor, Course, Student, student_course_association, User
+from models import Professor, Course, Student, student_course_association, User
 from schemas.student_schemas import (
     ProfessorUpdate,
     ProfessorResponse,

@@ -19,7 +19,7 @@ from controllers.auth_controller import (
     get_current_professor_profile
 )
 from schemas.student_schemas import UserLogin, StudentCreate, ProfessorCreate
-from models.student import User, Student, Professor, UserRole
+from models import User, Student, Professor, UserRole
 
 class TestAuthController:
     """Unit tests for authentication controller functions"""

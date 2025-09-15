@@ -1,6 +1,9 @@
 """
 Models package - Import all models here for database initialization
 """
-from .student import User, Student, Professor, Course, UserRole, student_course_association
+from .user import User, UserRole
+from .student import Student
+from .professor import Professor
+from .course import Course, student_course_association
 
-__all__ = ["User", "Student", "Professor", "Course", "UserRole", "student_course_association"]
+__all__ = ["User", "UserRole", "Student", "Professor", "Course", "student_course_association"]

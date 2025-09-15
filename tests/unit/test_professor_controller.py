@@ -18,7 +18,7 @@ from controllers.professor_controller import (
     get_course_students, remove_student_from_course, get_course_enrollment_stats
 )
 from schemas.student_schemas import ProfessorUpdate, CourseCreate, CourseUpdate
-from models.student import Professor, Course, Student, User
+from models import Professor, Course, Student, User
 
 class TestProfessorProfileManagement:
     """Unit tests for professor profile management"""

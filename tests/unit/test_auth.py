@@ -18,7 +18,7 @@ from config.auth import (
     verify_token,
     authenticate_user
 )
-from models.student import User, UserRole
+from models import User, UserRole
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 
@@ -266,7 +266,7 @@ class TestRoleBasedAccess:
     def test_get_current_student_valid(self, mock_get_db):
         """Test getting current student with valid student user"""
         from config.auth import get_current_student
-        from models.student import UserRole
+        from models import UserRole
         
         # Create mock user with student role
         mock_user = Mock()
@@ -288,7 +288,7 @@ class TestRoleBasedAccess:
     def test_get_current_student_wrong_role(self):
         """Test getting current student with professor user"""
         from config.auth import get_current_student
-        from models.student import UserRole
+        from models import UserRole
         
         # Create mock user with professor role
         mock_user = Mock()
@@ -306,7 +306,7 @@ class TestRoleBasedAccess:
     def test_get_current_professor_valid(self, mock_get_db):
         """Test getting current professor with valid professor user"""
         from config.auth import get_current_professor
-        from models.student import UserRole
+        from models import UserRole
         
         # Create mock user with professor role
         mock_user = Mock()
@@ -328,7 +328,7 @@ class TestRoleBasedAccess:
     def test_get_current_professor_wrong_role(self):
         """Test getting current professor with student user"""
         from config.auth import get_current_professor
-        from models.student import UserRole
+        from models import UserRole
         
         # Create mock user with student role
         mock_user = Mock()

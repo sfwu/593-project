@@ -18,7 +18,7 @@ from controllers.student_controller import (
     get_student_schedule
 )
 from schemas.student_schemas import StudentUpdate, EnrollmentCreate
-from models.student import Student, Course, Professor, User
+from models import Student, Course, Professor, User
 
 class TestStudentProfileManagement:
     """Unit tests for student profile management"""
