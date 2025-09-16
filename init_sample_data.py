@@ -145,8 +145,8 @@ if __name__ == "__main__":
         print("\n✅ Database initialization completed!")
         print("\n🚀 Quick start:")
         print("   • Start services: ./start.sh")
-        print("   • View frontend: http://localhost:9200")
-        print("   • View API docs: http://localhost:9100/docs")
+        print("   • View frontend: http://localhost:9700")
+        print("   • View API docs: http://localhost:9600/docs")
         print("   • Run tests: python run_tests.py")
     else:
         print("\n❌ Database initialization failed!")

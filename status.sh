@@ -11,8 +11,8 @@ if [ -f ".backend.pid" ]; then
     BACKEND_PID=$(cat .backend.pid)
     if kill -0 $BACKEND_PID 2>/dev/null; then
         echo "🔧 Backend: ✅ RUNNING (PID: $BACKEND_PID)"
-        echo "   📊 API: http://localhost:9100"
-        echo "   📚 Docs: http://localhost:9100/docs"
+        echo "   📊 API: http://localhost:9600"
+        echo "   📚 Docs: http://localhost:9600/docs"
     else
         echo "🔧 Backend: ❌ STOPPED (stale PID file)"
         rm -f .backend.pid
@@ -26,7 +26,7 @@ if [ -f ".frontend.pid" ]; then
     FRONTEND_PID=$(cat .frontend.pid)
     if kill -0 $FRONTEND_PID 2>/dev/null; then
         echo "🎨 Frontend: ✅ RUNNING (PID: $FRONTEND_PID)"
-        echo "   🌐 Web UI: http://localhost:9200"
+        echo "   🌐 Web UI: http://localhost:9700"
     else
         echo "🎨 Frontend: ❌ STOPPED (stale PID file)"
         rm -f .frontend.pid

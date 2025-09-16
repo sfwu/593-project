@@ -11,12 +11,12 @@ if __name__ == "__main__":
     app_path = os.path.join(frontend_path, 'app.py')
     
     print("🎓 Starting Academic Information Management System Frontend...")
-    print("🌐 Frontend URL: http://localhost:9200")
-    print("⚠️  Make sure the backend is running on http://localhost:9100")
+    print("🌐 Frontend URL: http://localhost:9700")
+    print("⚠️  Make sure the backend is running on http://localhost:9600")
     print("⏹️  Press Ctrl+C to stop")
     
     try:
-        subprocess.run([sys.executable, "-m", "streamlit", "run", app_path, "--server.port", "9200"], check=True)
+        subprocess.run([sys.executable, "-m", "streamlit", "run", app_path, "--server.port", "9700"], check=True)
     except KeyboardInterrupt:
         print("\n👋 Frontend stopped")
     except subprocess.CalledProcessError as e:
