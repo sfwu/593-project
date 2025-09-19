@@ -7,14 +7,20 @@ It includes tests for:
 - Authentication system (JWT, password hashing)
 - Database models (User, Student, Professor, Course)
 - Pydantic schemas validation
-- API controllers (auth, student, professor)
+- API controllers (auth, student, professor, course, grading, academic records, student info)
 - Business logic and error handling
+- Grading and assessment management
+- Student information management
+- Academic record tracking
 
 Usage:
     python run_unit_tests.py              # Run all unit tests
     python run_unit_tests.py --verbose    # Run with verbose output
     python run_unit_tests.py --coverage   # Run with coverage report
     python run_unit_tests.py --module auth # Run specific module tests
+    python run_unit_tests.py --module grading_assessment # Run grading tests
+    python run_unit_tests.py --module student_information # Run student info tests
+    python run_unit_tests.py --module academic_record # Run academic record tests
 """
 
 import subprocess
@@ -80,7 +86,17 @@ def run_unit_tests(verbose=False, coverage=False, module=None):
             'schemas': 'tests/unit/test_schemas.py',
             'auth_controller': 'tests/unit/test_auth_controller.py',
             'student_controller': 'tests/unit/test_student_controller.py',
-            'professor_controller': 'tests/unit/test_professor_controller.py'
+            'professor_controller': 'tests/unit/test_professor_controller.py',
+            'course_controller': 'tests/unit/test_course_controller.py',
+            'grading_assessment_controller': 'tests/unit/test_grading_assessment_controller.py',
+            'grading_assessment_service': 'tests/unit/test_grading_assessment_service.py',
+            'student_information_controller': 'tests/unit/test_student_information_controller.py',
+            'student_information_service': 'tests/unit/test_student_information_service.py',
+            'academic_record_controller': 'tests/unit/test_academic_record_controller.py',
+            'academic_record_service': 'tests/unit/test_academic_record_service.py',
+            'grading_assessment': 'tests/unit/test_grading_assessment_controller.py tests/unit/test_grading_assessment_service.py',
+            'student_information': 'tests/unit/test_student_information_controller.py tests/unit/test_student_information_service.py',
+            'academic_record': 'tests/unit/test_academic_record_controller.py tests/unit/test_academic_record_service.py'
         }
         
         if module in module_map:
