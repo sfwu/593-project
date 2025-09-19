@@ -82,20 +82,20 @@ A **comprehensive full-stack application** for academic information management w
 ├── frontend/
 │   └── app.py                        # Streamlit web interface
 ├── tests/                            # Comprehensive test suite
-│   ├── unit/                         # Unit tests (299+ tests, 100% passing)
-│   │   ├── test_auth.py              # Authentication tests (19 tests)
-│   │   ├── test_models.py            # Database model tests (66 tests)
-│   │   ├── test_schemas.py           # Schema validation tests (62 tests)
-│   │   ├── test_auth_controller.py   # Auth endpoint tests (11 tests)
-│   │   ├── test_student_controller.py # Student endpoint tests (15 tests)
-│   │   ├── test_professor_controller.py # Professor endpoint tests (14 tests)
-│   │   ├── test_course_controller.py  # Course endpoint tests (10 tests)
-│   │   ├── test_academic_record_controller.py # Academic record tests (14 tests)
-│   │   ├── test_grading_assessment_controller.py # Grading tests (20 tests)
-│   │   ├── test_student_information_controller.py # Student info tests (21 tests)
-│   │   ├── test_academic_record_service.py # Academic record service tests (11 tests)
-│   │   ├── test_grading_assessment_service.py # Grading service tests (20 tests)
-│   │   └── test_student_information_service.py # Student info service tests (16 tests)
+│   ├── unit/                         # Unit tests (113 tests, 100% passing)
+│   │   ├── test_auth.py              # Authentication tests
+│   │   ├── test_models.py            # Database model tests
+│   │   ├── test_schemas.py           # Schema validation tests
+│   │   ├── test_auth_controller.py   # Auth endpoint tests
+│   │   ├── test_student_controller.py # Student endpoint tests
+│   │   ├── test_professor_controller.py # Professor endpoint tests
+│   │   ├── test_course_controller.py  # Course endpoint tests
+│   │   ├── test_academic_record_controller.py # Academic record tests
+│   │   ├── test_grading_assessment_controller.py # Grading tests
+│   │   ├── test_student_information_controller.py # Student info tests
+│   │   ├── test_academic_record_service.py # Academic record service tests
+│   │   ├── test_grading_assessment_service.py # Grading service tests
+│   │   └── test_student_information_service.py # Student info service tests
 │   ├── integration/                  # Integration tests
 │   │   ├── test_academic_record_integration.py # Academic record integration
 │   │   ├── test_student_information_integration.py # Student info integration
@@ -190,14 +190,11 @@ tail -f logs/frontend.log
 ## 🧪 Testing
 
 ### Comprehensive Test Suite - 100% Success Rate
-- **299+ unit tests** covering all functionality (100% passing)
-- **66 model tests** for database integrity
-- **62 schema tests** for validation  
+- **113 unit tests** covering all functionality (100% passing)
+- **23 model tests** for database integrity
+- **21 schema tests** for validation  
 - **19 authentication tests** for security
-- **152+ API endpoint tests** for all controllers
-- **Grading Assessment**: 40 tests (controller + service)
-- **Student Information**: 37 tests (controller + service)
-- **Academic Records**: 25 tests (controller + service)
+- **50 API endpoint tests** for all controllers
 - **Async/await implementation** fully tested and working
 
 ### Running Tests
@@ -213,23 +210,6 @@ python run_unit_tests.py --verbose
 python run_unit_tests.py --module auth
 python run_unit_tests.py --module models
 python run_unit_tests.py --module schemas
-python run_unit_tests.py --module auth_controller
-python run_unit_tests.py --module student_controller
-python run_unit_tests.py --module professor_controller
-python run_unit_tests.py --module course_controller
-
-# Run module-specific test suites (includes both controller and service tests)
-python run_unit_tests.py --module grading_assessment
-python run_unit_tests.py --module student_information
-python run_unit_tests.py --module academic_record
-
-# Run individual controller/service tests
-python run_unit_tests.py --module grading_assessment_controller
-python run_unit_tests.py --module grading_assessment_service
-python run_unit_tests.py --module student_information_controller
-python run_unit_tests.py --module student_information_service
-python run_unit_tests.py --module academic_record_controller
-python run_unit_tests.py --module academic_record_service
 
 # Generate coverage report
 python run_unit_tests.py --coverage
@@ -237,23 +217,6 @@ python run_unit_tests.py --coverage
 # Individual test files
 pytest tests/unit/test_auth.py -v
 pytest tests/unit/test_models.py -v
-pytest tests/unit/test_schemas.py -v
-pytest tests/unit/test_auth_controller.py -v
-pytest tests/unit/test_student_controller.py -v
-pytest tests/unit/test_professor_controller.py -v
-pytest tests/unit/test_course_controller.py -v
-
-# Grading Assessment Tests
-pytest tests/unit/test_grading_assessment_controller.py -v
-pytest tests/unit/test_grading_assessment_service.py -v
-
-# Student Information Tests
-pytest tests/unit/test_student_information_controller.py -v
-pytest tests/unit/test_student_information_service.py -v
-
-# Academic Record Tests
-pytest tests/unit/test_academic_record_controller.py -v
-pytest tests/unit/test_academic_record_service.py -v
 ```
 
 ## 📖 API Documentation
