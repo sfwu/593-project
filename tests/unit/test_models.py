@@ -14,11 +14,11 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../backend'))
 
 from models import User, Student, Professor, Course, UserRole, student_course_association
-from models.academic_record import AcademicRecord, Transcript, AcademicProgress, SemesterGPA, GradeStatus, TranscriptStatus
+from models.academic_record import AcademicRecord, Transcript, AcademicProgress, SemesterGPA, GradeStatus as AcademicGradeStatus, TranscriptStatus
 from models.grading_assessment import (
     Assignment, AssignmentSubmission, Exam, ExamSession, Grade, Gradebook,
     GradebookEntry, GradeStatistics, GradeModification, AssignmentType,
-    ExamType, SubmissionStatus
+    ExamType, SubmissionStatus, GradeStatus
 )
 from models.student_information import (
     Attendance, AttendanceSummary, Message, MessageRecipient, StudentDirectory,
@@ -542,7 +542,7 @@ class TestAcademicRecord:
             percentage_grade=95.0,
             credits_earned=3,
             credits_attempted=3,
-            status=GradeStatus.GRADED
+            status=AcademicGradeStatus.GRADED
         )
         
         db_session.add(record)
@@ -554,7 +554,7 @@ class TestAcademicRecord:
         assert record.course_id == sample_course.id
         assert record.letter_grade == "A"
         assert record.numeric_grade == 4.0
-        assert record.status == GradeStatus.GRADED
+        assert record.status == AcademicGradeStatus.GRADED
     
     def test_academic_record_relationships(self, db_session, sample_student, sample_course):
         """Test academic record relationships"""
@@ -567,7 +567,7 @@ class TestAcademicRecord:
             numeric_grade=3.3,
             credits_earned=3,
             credits_attempted=3,
-            status=GradeStatus.GRADED
+            status=AcademicGradeStatus.GRADED
         )
         
         db_session.add(record)
@@ -708,10 +708,10 @@ class TestAcademicRecordEnums:
     
     def test_grade_status_enum(self):
         """Test GradeStatus enum values"""
-        assert GradeStatus.PENDING == "pending"
-        assert GradeStatus.GRADED == "graded"
-        assert GradeStatus.INCOMPLETE == "incomplete"
-        assert GradeStatus.WITHDRAWN == "withdrawn"
+        assert AcademicGradeStatus.PENDING == "pending"
+        assert AcademicGradeStatus.GRADED == "graded"
+        assert AcademicGradeStatus.INCOMPLETE == "incomplete"
+        assert AcademicGradeStatus.WITHDRAWN == "withdrawn"
     
     def test_transcript_status_enum(self):
         """Test TranscriptStatus enum values"""

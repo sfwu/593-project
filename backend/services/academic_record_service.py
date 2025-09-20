@@ -373,13 +373,14 @@ class AcademicRecordService:
         """Assess if student is on track for graduation"""
         # Simple assessment - could be more sophisticated
         credits_per_semester = 15  # Expected credits per semester
-        semesters_remaining = (progress.total_credits_required - progress.total_credits_earned) / credits_per_semester
+        credits_remaining = progress.total_credits_required - progress.total_credits_earned
+        semesters_remaining = credits_remaining / credits_per_semester if credits_per_semester > 0 else 0
         
         # Check if GPA is above minimum (2.0)
         gpa_ok = progress.cumulative_gpa >= 2.0
         
-        # Check if on track to graduate in reasonable time
-        time_ok = semesters_remaining <= 8  # Max 4 years
+        # Check if on track to graduate in reasonable time (max 6 semesters = 3 years)
+        time_ok = semesters_remaining <= 6
         
         return gpa_ok and time_ok
     

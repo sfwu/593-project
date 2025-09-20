@@ -388,7 +388,7 @@ class TestAcademicRecordSchemas:
         assert update.letter_grade == "B+"
         assert update.numeric_grade == 3.3
         assert update.status == GradeStatus.GRADED
-        assert update.course_id is None
+        # course_id is not in AcademicRecordUpdate schema
     
     def test_academic_record_response(self):
         """Test academic record response"""
@@ -420,33 +420,27 @@ class TestTranscriptSchemas:
     def test_transcript_create_valid(self):
         """Test valid transcript creation"""
         transcript_data = {
-            "student_id": 1,
             "transcript_type": "official",
-            "status": TranscriptStatus.OFFICIAL,
-            "total_credits_earned": 60,
-            "total_credits_attempted": 60,
-            "cumulative_gpa": 3.5,
-            "major_gpa": 3.7
+            "status": TranscriptStatus.OFFICIAL
         }
         
         transcript = TranscriptCreate(**transcript_data)
-        assert transcript.student_id == 1
+        # student_id is not in TranscriptCreate schema
         assert transcript.transcript_type == "official"
         assert transcript.status == TranscriptStatus.OFFICIAL
-        assert transcript.total_credits_earned == 60
-        assert transcript.cumulative_gpa == 3.5
+        # total_credits_earned and cumulative_gpa are not in TranscriptCreate schema
     
     def test_transcript_update(self):
         """Test transcript update"""
         update_data = {
             "status": TranscriptStatus.ARCHIVED,
-            "notes": "Archived transcript"
+            "file_path": "/path/to/archived/transcript.pdf"
         }
         
         update = TranscriptUpdate(**update_data)
         assert update.status == TranscriptStatus.ARCHIVED
-        assert update.notes == "Archived transcript"
-        assert update.student_id is None
+        assert update.file_path == "/path/to/archived/transcript.pdf"
+        # notes and student_id are not in TranscriptUpdate schema
 
 class TestAcademicProgressSchemas:
     """Unit tests for Academic Progress schemas"""
@@ -454,37 +448,32 @@ class TestAcademicProgressSchemas:
     def test_academic_progress_create_valid(self):
         """Test valid academic progress creation"""
         progress_data = {
-            "student_id": 1,
             "degree_program": "Bachelor of Science in Computer Science",
             "major": "Computer Science",
             "catalog_year": 2022,
             "total_credits_required": 120,
-            "major_credits_required": 60,
-            "total_credits_earned": 60,
-            "major_credits_earned": 30,
-            "cumulative_gpa": 3.5,
-            "major_gpa": 3.7
+            "major_credits_required": 60
         }
         
         progress = AcademicProgressCreate(**progress_data)
-        assert progress.student_id == 1
+        # student_id is not in AcademicProgressCreate schema
         assert progress.degree_program == "Bachelor of Science in Computer Science"
         assert progress.major == "Computer Science"
         assert progress.catalog_year == 2022
         assert progress.total_credits_required == 120
-        assert progress.cumulative_gpa == 3.5
+        # cumulative_gpa is not in AcademicProgressCreate schema
     
     def test_academic_progress_update(self):
         """Test academic progress update"""
         update_data = {
-            "total_credits_earned": 75,
-            "cumulative_gpa": 3.6
+            "total_credits_required": 125,
+            "major_credits_required": 65
         }
         
         update = AcademicProgressUpdate(**update_data)
-        assert update.total_credits_earned == 75
-        assert update.cumulative_gpa == 3.6
-        assert update.student_id is None
+        assert update.total_credits_required == 125
+        assert update.major_credits_required == 65
+        # total_credits_earned, cumulative_gpa, and student_id are not in AcademicProgressUpdate schema
 
 class TestSemesterGPASchemas:
     """Unit tests for Semester GPA schemas"""
@@ -492,7 +481,6 @@ class TestSemesterGPASchemas:
     def test_semester_gpa_create_valid(self):
         """Test valid semester GPA creation"""
         gpa_data = {
-            "student_id": 1,
             "semester": "Fall",
             "year": 2024,
             "semester_gpa": 3.5,
@@ -504,7 +492,7 @@ class TestSemesterGPASchemas:
         }
         
         gpa = SemesterGPACreate(**gpa_data)
-        assert gpa.student_id == 1
+        # student_id is not in SemesterGPACreate schema
         assert gpa.semester == "Fall"
         assert gpa.year == 2024
         assert gpa.semester_gpa == 3.5
@@ -521,7 +509,7 @@ class TestSemesterGPASchemas:
         update = SemesterGPAUpdate(**update_data)
         assert update.semester_gpa == 3.7
         assert update.quality_points == 55.5
-        assert update.student_id is None
+        # student_id is not in SemesterGPAUpdate schema
 
 class TestAcademicRecordEnums:
     """Unit tests for Academic Record enums"""
@@ -608,7 +596,7 @@ class TestAssignmentSchemas:
         assert update.title == "Updated Assignment Title"
         assert update.description == "Updated description"
         assert update.total_points == 75.0
-        assert update.course_id is None
+        # course_id is not in AssignmentUpdate schema
 
 class TestExamSchemas:
     """Unit tests for Exam schemas"""
@@ -662,7 +650,7 @@ class TestExamSchemas:
         assert update.title == "Updated Exam Title"
         assert update.location == "Room 201"
         assert update.is_online == True
-        assert update.course_id is None
+        # course_id is not in ExamUpdate schema
 
 class TestGradeSchemas:
     """Unit tests for Grade schemas"""
@@ -709,7 +697,7 @@ class TestGradeSchemas:
         assert update.percentage == 90.0
         assert update.letter_grade == "A-"
         assert update.professor_comments == "Excellent work!"
-        assert update.student_id is None
+        # student_id is not in GradeUpdate schema
 
 class TestGradebookSchemas:
     """Unit tests for Gradebook schemas"""
@@ -760,7 +748,7 @@ class TestGradebookSchemas:
         assert update.allow_student_view == False
         assert update.curve_enabled == True
         assert update.curve_percentage == 5.0
-        assert update.course_id is None
+        # course_id is not in GradebookUpdate schema
 
 class TestGradingAssessmentEnums:
     """Unit tests for Grading and Assessment enums"""
@@ -862,7 +850,7 @@ class TestAttendanceSchemas:
         assert update.status == AttendanceStatus.LATE
         assert update.late_minutes == 15
         assert update.notes == "Student arrived late"
-        assert update.student_id is None
+        # student_id is not in AttendanceUpdate schema
 
 class TestMessageSchemas:
     """Unit tests for Message schemas"""
@@ -870,30 +858,27 @@ class TestMessageSchemas:
     def test_message_create_valid(self):
         """Test valid message creation"""
         message_data = {
-            "sender_id": 1,
             "course_id": 1,
             "subject": "Assignment Due Date",
             "content": "Please remember that the assignment is due next week.",
             "message_type": MessageType.ASSIGNMENT,
             "priority": MessagePriority.HIGH,
-            "is_broadcast": True,
-            "status": MessageStatus.DRAFT
+            "is_broadcast": True
         }
         
         message = MessageCreate(**message_data)
-        assert message.sender_id == 1
+        # sender_id is not in MessageCreate schema
         assert message.course_id == 1
         assert message.subject == "Assignment Due Date"
         assert message.content == "Please remember that the assignment is due next week."
         assert message.message_type == MessageType.ASSIGNMENT
         assert message.priority == MessagePriority.HIGH
         assert message.is_broadcast == True
-        assert message.status == MessageStatus.DRAFT
+        # status is not in MessageCreate schema
     
     def test_message_create_minimal(self):
         """Test message creation with minimal data"""
         message_data = {
-            "sender_id": 1,
             "subject": "Test Message",
             "content": "This is a test message.",
             "message_type": MessageType.GENERAL,
@@ -901,28 +886,28 @@ class TestMessageSchemas:
         }
         
         message = MessageCreate(**message_data)
-        assert message.sender_id == 1
+        # sender_id is not in MessageCreate schema
         assert message.subject == "Test Message"
         assert message.content == "This is a test message."
         assert message.message_type == MessageType.GENERAL
         assert message.priority == MessagePriority.NORMAL
         assert message.course_id is None
         assert message.is_broadcast == False
-        assert message.status == MessageStatus.DRAFT
+        # status is not in MessageCreate schema
     
     def test_message_update(self):
         """Test message update"""
         update_data = {
             "subject": "Updated Subject",
             "content": "Updated content",
-            "status": MessageStatus.SENT
+            "priority": MessagePriority.HIGH
         }
         
         update = MessageUpdate(**update_data)
         assert update.subject == "Updated Subject"
         assert update.content == "Updated content"
-        assert update.status == MessageStatus.SENT
-        assert update.sender_id is None
+        assert update.priority == MessagePriority.HIGH
+        # status and sender_id are not in MessageUpdate schema
 
 class TestStudentDirectorySchemas:
     """Unit tests for Student Directory schemas"""
@@ -971,7 +956,7 @@ class TestStudentDirectorySchemas:
         assert update.phone == "987-654-3210"
         assert update.gpa == 3.7
         assert update.notes == "Updated notes"
-        assert update.student_id is None
+        # student_id is not in StudentDirectoryUpdate schema
 
 class TestStudentPerformanceSchemas:
     """Unit tests for Student Performance schemas"""
@@ -1015,7 +1000,7 @@ class TestStudentPerformanceSchemas:
         assert update.current_grade == 88.0
         assert update.is_at_risk == True
         assert update.professor_notes == "Needs improvement"
-        assert update.student_id is None
+        # student_id is not in StudentPerformanceUpdate schema
 
 class TestCommunicationLogSchemas:
     """Unit tests for Communication Log schemas"""
@@ -1049,14 +1034,14 @@ class TestCommunicationLogSchemas:
         update_data = {
             "communication_type": "meeting",
             "requires_follow_up": False,
-            "notes": "Meeting completed"
+            "follow_up_notes": "Meeting completed"
         }
         
         update = CommunicationLogUpdate(**update_data)
         assert update.communication_type == "meeting"
         assert update.requires_follow_up == False
-        assert update.notes == "Meeting completed"
-        assert update.professor_id is None
+        assert update.follow_up_notes == "Meeting completed"
+        # notes and professor_id are not in CommunicationLogUpdate schema
 
 class TestStudentInformationEnums:
     """Unit tests for Student Information Management enums"""

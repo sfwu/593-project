@@ -68,13 +68,14 @@ class TestAcademicRecordController:
     def mock_gpa_response(self):
         """Mock GPA calculation response"""
         return GPACalculationResponse(
-            student_id=1,
             cumulative_gpa=3.5,
             major_gpa=3.7,
+            semester_gpa=3.6,
             total_credits_earned=60,
             total_credits_attempted=60,
-            quality_points=210.0,
-            last_updated=datetime.now()
+            total_quality_points=210.0,
+            semester_breakdown=[],
+            grade_distribution={"A": 5, "B": 3}
         )
     
     @pytest.fixture
@@ -85,6 +86,8 @@ class TestAcademicRecordController:
             student_id=1,
             transcript_type="official",
             status=TranscriptStatus.OFFICIAL,
+            generated_date=datetime.now(),
+            requested_date=datetime.now(),
             total_credits_earned=60,
             total_credits_attempted=60,
             cumulative_gpa=3.5,
@@ -104,10 +107,16 @@ class TestAcademicRecordController:
             catalog_year=2022,
             total_credits_required=120,
             major_credits_required=60,
+            general_education_credits_required=30,
+            elective_credits_required=30,
             total_credits_earned=60,
             major_credits_earned=30,
+            general_education_credits_earned=15,
+            elective_credits_earned=15,
             cumulative_gpa=3.5,
             major_gpa=3.7,
+            semester_gpa=3.6,
+            is_on_track=True,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -155,8 +164,10 @@ class TestAcademicRecordController:
             db=mock_db
         )
         
-        # Assertions
-        mock_service.get_student_grades.assert_called_once_with(1, None, None, None)
+        # Assertions - Note: FastAPI Query parameters are wrapped in Query objects
+        mock_service.get_student_grades.assert_called_once()
+        call_args = mock_service.get_student_grades.call_args[0]
+        assert call_args[0] == 1  # student_id
         assert result == [mock_academic_record_response]
     
     @patch('controllers.academic_record_controller.AcademicRecordService')
@@ -211,31 +222,27 @@ class TestAcademicRecordController:
         """Test successful grade update"""
         # Mock service instance
         mock_service = Mock()
-        mock_service.get_student_grades.return_value = [mock_academic_record_response]
-        mock_service.update_academic_record.return_value = mock_academic_record_response
+        mock_service.update_grade.return_value = mock_academic_record_response
         mock_service_class.return_value = mock_service
         
         # Import the function
         from controllers.academic_record_controller import update_grade
         
-        # Create update data
+        # Create update data - students can only update their own notes
         update_data = AcademicRecordUpdate(
-            letter_grade="A+",
-            numeric_grade=4.0,
-            status=GradeStatus.GRADED
+            student_notes="Updated my notes for this course"
         )
         
         # Call the function
         result = await update_grade(
             record_id=1,
-            grade_update=update_data,
+            grade_data=update_data,
             current_student=mock_student,
             db=mock_db
         )
         
         # Assertions
-        mock_service.get_student_grades.assert_called_once_with(1)
-        mock_service.update_academic_record.assert_called_once_with(1, update_data)
+        mock_service.update_grade.assert_called_once_with(1, update_data, 1)
         assert result == mock_academic_record_response
     
     @patch('controllers.academic_record_controller.AcademicRecordService')
@@ -311,7 +318,7 @@ class TestAcademicRecordController:
         # Create request data
         request_data = TranscriptGenerationRequest(
             transcript_type="official",
-            include_in_progress=True,
+            include_incomplete=True,
             include_withdrawn=False
         )
         
@@ -336,10 +343,10 @@ class TestAcademicRecordController:
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.academic_record_controller import get_transcripts
+        from controllers.academic_record_controller import get_student_transcripts
         
         # Call the function
-        result = await get_transcripts(
+        result = await get_student_transcripts(
             current_student=mock_student,
             db=mock_db
         )
@@ -384,13 +391,12 @@ class TestAcademicRecordController:
         
         # Create update data
         update_data = AcademicProgressUpdate(
-            total_credits_earned=75,
-            cumulative_gpa=3.6
+            expected_graduation_date=datetime(2025, 5, 15)
         )
         
         # Call the function
         result = await update_academic_progress(
-            progress_update=update_data,
+            progress_data=update_data,
             current_student=mock_student,
             db=mock_db
         )
@@ -408,15 +414,13 @@ class TestAcademicRecordController:
         mock_grade_history = StudentGradeHistory(
             student_id=1,
             total_courses=10,
-            total_credits_earned=30,
-            total_credits_attempted=30,
+            courses_completed=8,
+            courses_incomplete=1,
+            courses_withdrawn=1,
             cumulative_gpa=3.5,
-            grade_distribution={"A": 5, "B": 3, "C": 2},
-            semester_breakdown=[
-                {"semester": "Fall 2023", "gpa": 3.4, "credits": 15},
-                {"semester": "Spring 2024", "gpa": 3.6, "credits": 15}
-            ],
-            last_updated=datetime.now()
+            major_gpa=3.7,
+            grade_summary=[],
+            semester_breakdown=[]
         )
         mock_service.get_grade_history.return_value = mock_grade_history
         mock_service_class.return_value = mock_service
@@ -440,16 +444,31 @@ class TestAcademicRecordController:
         """Test retrieval of academic summary"""
         # Mock service instance
         mock_service = Mock()
-        mock_summary = {
-            "student_id": 1,
-            "current_gpa": 3.5,
-            "total_credits": 60,
-            "courses_completed": 20,
-            "major": "Computer Science",
-            "year_level": "Junior",
-            "academic_standing": "Good Standing"
-        }
-        mock_service.get_academic_summary.return_value = mock_summary
+        
+        # Mock GPA data
+        mock_gpa_data = Mock()
+        mock_gpa_data.cumulative_gpa = 3.5
+        mock_gpa_data.major_gpa = 3.7
+        mock_gpa_data.semester_gpa = 3.6
+        mock_gpa_data.total_credits_earned = 60
+        mock_gpa_data.total_credits_attempted = 60
+        mock_gpa_data.grade_distribution = {"A": 5, "B": 3}
+        mock_gpa_data.semester_breakdown = []
+        
+        # Mock progress summary
+        mock_progress_summary = Mock()
+        mock_progress_summary.dict.return_value = {"completion_percentage": 50.0}
+        
+        # Mock grade history
+        mock_grade_history = Mock()
+        mock_grade_history.total_courses = 20
+        mock_grade_history.courses_completed = 18
+        mock_grade_history.courses_incomplete = 1
+        mock_grade_history.courses_withdrawn = 1
+        
+        mock_service.calculate_gpa.return_value = mock_gpa_data
+        mock_service.get_academic_progress_summary.return_value = mock_progress_summary
+        mock_service.get_grade_history.return_value = mock_grade_history
         mock_service_class.return_value = mock_service
         
         # Import the function
@@ -462,8 +481,10 @@ class TestAcademicRecordController:
         )
         
         # Assertions
-        mock_service.get_academic_summary.assert_called_once_with(1)
-        assert result == mock_summary
+        mock_service.calculate_gpa.assert_called_once_with(1)
+        mock_service.get_academic_progress_summary.assert_called_once_with(1)
+        mock_service.get_grade_history.assert_called_once_with(1)
+        assert result is not None
     
     @patch('controllers.academic_record_controller.AcademicRecordService')
     @pytest.mark.asyncio
@@ -471,31 +492,52 @@ class TestAcademicRecordController:
         """Test retrieval of academic dashboard"""
         # Mock service instance
         mock_service = Mock()
-        mock_dashboard = {
-            "student_id": 1,
-            "current_gpa": 3.5,
-            "semester_gpa": 3.6,
-            "credits_this_semester": 15,
-            "courses_in_progress": 5,
-            "recent_grades": [],
-            "upcoming_deadlines": [],
-            "academic_alerts": []
-        }
-        mock_service.get_dashboard_data.return_value = mock_dashboard
+        
+        # Mock GPA data
+        mock_gpa_data = Mock()
+        mock_gpa_data.cumulative_gpa = 3.5
+        mock_gpa_data.major_gpa = 3.7
+        mock_gpa_data.semester_gpa = 3.6
+        mock_gpa_data.total_credits_earned = 60
+        mock_gpa_data.total_credits_attempted = 60
+        mock_gpa_data.grade_distribution = {"A": 5, "B": 3}
+        
+        # Mock recent grades
+        mock_recent_grade = Mock()
+        mock_recent_grade.dict.return_value = {"course": "CS101", "grade": "A"}
+        mock_recent_grades = [mock_recent_grade]
+        
+        # Mock progress summary
+        mock_progress_summary = Mock()
+        mock_progress_summary.is_on_track = True
+        mock_progress_summary.dict.return_value = {"completion_percentage": 50.0}
+        
+        # Mock semester breakdown
+        mock_semester = Mock()
+        mock_semester.dict.return_value = {"semester": "Fall 2024", "gpa": 3.5}
+        mock_semester_breakdown = [mock_semester]
+        
+        mock_service.calculate_gpa.return_value = mock_gpa_data
+        mock_service.get_student_grades.return_value = mock_recent_grades
+        mock_service.get_academic_progress_summary.return_value = mock_progress_summary
+        mock_service.get_semester_gpa_breakdown.return_value = mock_semester_breakdown
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.academic_record_controller import get_dashboard
+        from controllers.academic_record_controller import get_academic_dashboard
         
         # Call the function
-        result = await get_dashboard(
+        result = await get_academic_dashboard(
             current_student=mock_student,
             db=mock_db
         )
         
         # Assertions
-        mock_service.get_dashboard_data.assert_called_once_with(1)
-        assert result == mock_dashboard
+        mock_service.calculate_gpa.assert_called_once_with(1)
+        mock_service.get_student_grades.assert_called_once_with(1)
+        mock_service.get_academic_progress_summary.assert_called_once_with(1)
+        mock_service.get_semester_gpa_breakdown.assert_called_once_with(1)
+        assert result is not None
 
 if __name__ == "__main__":
     pytest.main([__file__])

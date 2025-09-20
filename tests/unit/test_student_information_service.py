@@ -55,6 +55,15 @@ class TestStudentInformationService:
         mock_attendance.course_id = 1
         mock_attendance.status = AttendanceStatus.PRESENT
         mock_attendance.attendance_date = datetime.now()
+        mock_attendance.notes = "Good participation"
+        mock_attendance.late_minutes = 0
+        mock_attendance.session_topic = "Introduction to Programming"
+        mock_attendance.session_duration = 90
+        mock_attendance.recorded_at = datetime.now()
+        mock_attendance.recorded_by = 1
+        mock_attendance.updated_at = datetime.now()
+        mock_attendance.student = None
+        mock_attendance.course = None
         
         mock_repository.create_attendance.return_value = mock_attendance
         
@@ -84,17 +93,46 @@ class TestStudentInformationService:
     def test_get_attendance_records(self, service, mock_repository):
         """Test getting attendance records"""
         # Arrange
-        mock_records = [Mock(), Mock()]
+        mock_record1 = Mock()
+        mock_record1.id = 1
+        mock_record1.student_id = 1
+        mock_record1.course_id = 1
+        mock_record1.attendance_date = datetime.now()
+        mock_record1.status = AttendanceStatus.PRESENT
+        mock_record1.notes = "Good"
+        mock_record1.late_minutes = 0
+        mock_record1.session_topic = "Topic 1"
+        mock_record1.session_duration = 90
+        mock_record1.recorded_at = datetime.now()
+        mock_record1.recorded_by = 1
+        mock_record1.updated_at = datetime.now()
+        mock_record1.student = None
+        mock_record1.course = None
+        
+        mock_record2 = Mock()
+        mock_record2.id = 2
+        mock_record2.student_id = 2
+        mock_record2.course_id = 1
+        mock_record2.attendance_date = datetime.now()
+        mock_record2.status = AttendanceStatus.ABSENT
+        mock_record2.notes = "Absent"
+        mock_record2.late_minutes = 0
+        mock_record2.session_topic = "Topic 2"
+        mock_record2.session_duration = 90
+        mock_record2.recorded_at = datetime.now()
+        mock_record2.recorded_by = 1
+        mock_record2.updated_at = datetime.now()
+        mock_record2.student = None
+        mock_record2.course = None
+        
+        mock_records = [mock_record1, mock_record2]
         mock_repository.get_attendance_records.return_value = mock_records
         
         # Act
         result = service.get_attendance_records(course_id=1, professor_id=1)
         
         # Assert
-        mock_repository.get_attendance_records.assert_called_once_with(
-            course_id=1, student_id=None, professor_id=1, 
-            date_from=None, date_to=None, status=None
-        )
+        mock_repository.get_attendance_records.assert_called_once_with(1, None, 1, None, None, None)
         assert len(result) == 2
     
     def test_create_message_success(self, service, mock_repository):
@@ -113,8 +151,19 @@ class TestStudentInformationService:
         mock_message = Mock()
         mock_message.id = 1
         mock_message.sender_id = sender_id
+        mock_message.course_id = 1
         mock_message.subject = "Assignment Due Date"
+        mock_message.content = "Please remember that the assignment is due next week."
         mock_message.message_type = MessageType.ASSIGNMENT
+        mock_message.priority = MessagePriority.HIGH
+        mock_message.is_broadcast = True
+        mock_message.scheduled_at = None
+        mock_message.status = MessageStatus.DRAFT
+        mock_message.created_at = datetime.now()
+        mock_message.sent_at = None
+        mock_message.sender = {"id": 1, "name": "Professor"}
+        mock_message.course = {"id": 1, "name": "Test Course"}
+        mock_message.recipients = [{"id": 1, "name": "Student"}]
         
         mock_repository.create_message.return_value = mock_message
         
@@ -152,6 +201,18 @@ class TestStudentInformationService:
         mock_message.id = message_id
         mock_message.sender_id = sender_id
         mock_message.course_id = 1
+        mock_message.subject = "Test Message"
+        mock_message.content = "This is a test message content"
+        mock_message.message_type = MessageType.ASSIGNMENT
+        mock_message.priority = MessagePriority.HIGH
+        mock_message.is_broadcast = True
+        mock_message.scheduled_at = None
+        mock_message.status = MessageStatus.SENT
+        mock_message.created_at = datetime.now()
+        mock_message.sent_at = datetime.now()
+        mock_message.sender = {"id": 1, "name": "Professor"}
+        mock_message.course = {"id": 1, "name": "Test Course"}
+        mock_message.recipients = [{"id": 1, "name": "Student"}]
         
         mock_recipient = Mock()
         mock_recipient.student_id = 1
@@ -186,17 +247,56 @@ class TestStudentInformationService:
     def test_get_student_directory(self, service, mock_repository):
         """Test getting student directory"""
         # Arrange
-        mock_entries = [Mock(), Mock()]
+        mock_entry1 = Mock()
+        mock_entry1.id = 1
+        mock_entry1.student_id = 1
+        mock_entry1.email = "john@example.com"
+        mock_entry1.phone = "123-456-7890"
+        mock_entry1.emergency_contact = "Jane Doe"
+        mock_entry1.emergency_phone = "098-765-4321"
+        mock_entry1.address = "123 Main St"
+        mock_entry1.major = "Computer Science"
+        mock_entry1.year_level = "Junior"
+        mock_entry1.gpa = 3.5
+        mock_entry1.enrollment_status = "active"
+        mock_entry1.advisor_id = 1
+        mock_entry1.notes = "Good student"
+        mock_entry1.show_contact_info = True
+        mock_entry1.show_academic_info = True
+        mock_entry1.created_at = datetime.now()
+        mock_entry1.updated_at = datetime.now()
+        mock_entry1.student = None
+        mock_entry1.advisor = None
+        
+        mock_entry2 = Mock()
+        mock_entry2.id = 2
+        mock_entry2.student_id = 2
+        mock_entry2.email = "jane@example.com"
+        mock_entry2.phone = "987-654-3210"
+        mock_entry2.emergency_contact = "John Doe"
+        mock_entry2.emergency_phone = "123-456-7890"
+        mock_entry2.address = "456 Oak St"
+        mock_entry2.major = "Mathematics"
+        mock_entry2.year_level = "Senior"
+        mock_entry2.gpa = 3.8
+        mock_entry2.enrollment_status = "active"
+        mock_entry2.advisor_id = 2
+        mock_entry2.notes = "Excellent student"
+        mock_entry2.show_contact_info = True
+        mock_entry2.show_academic_info = True
+        mock_entry2.created_at = datetime.now()
+        mock_entry2.updated_at = datetime.now()
+        mock_entry2.student = None
+        mock_entry2.advisor = None
+        
+        mock_entries = [mock_entry1, mock_entry2]
         mock_repository.get_student_directory.return_value = mock_entries
         
         # Act
         result = service.get_student_directory(name="John", major="Computer Science")
         
         # Assert
-        mock_repository.get_student_directory.assert_called_once_with(
-            name="John", major="Computer Science", year_level=None,
-            enrollment_status=None, gpa_min=None, gpa_max=None, is_at_risk=None
-        )
+        mock_repository.get_student_directory.assert_called_once_with("John", "Computer Science", None, None, None, None, None)
         assert len(result) == 2
     
     def test_update_student_performance(self, service, mock_repository):
@@ -216,6 +316,20 @@ class TestStudentInformationService:
         mock_performance.student_id = 1
         mock_performance.course_id = 1
         mock_performance.current_grade = 85.5
+        mock_performance.participation_score = 90.0
+        mock_performance.attendance_score = 95.0
+        mock_performance.assignment_average = 80.0
+        mock_performance.exam_average = 90.0
+        mock_performance.is_at_risk = False
+        mock_performance.risk_factors = None
+        mock_performance.improvement_areas = None
+        mock_performance.professor_notes = "Good improvement"
+        mock_performance.last_contact_date = None
+        mock_performance.next_follow_up = None
+        mock_performance.created_at = datetime.now()
+        mock_performance.updated_at = datetime.now()
+        mock_performance.student = None
+        mock_performance.course = None
         
         mock_repository.update_student_performance.return_value = mock_performance
         
@@ -406,20 +520,42 @@ class TestStudentInformationService:
         
         # Mock attendance summaries
         mock_summary1 = Mock()
+        mock_summary1.id = 1
         mock_summary1.student_id = 1
-        mock_summary1.attendance_percentage = 95.0
+        mock_summary1.course_id = 1
+        mock_summary1.semester = "Fall"
+        mock_summary1.year = 2024
+        mock_summary1.total_sessions = 20
+        mock_summary1.present_count = 19
         mock_summary1.absent_count = 1
-        mock_summary1.student = Mock()
-        mock_summary1.student.first_name = "John"
-        mock_summary1.student.last_name = "Doe"
+        mock_summary1.late_count = 0
+        mock_summary1.excused_count = 0
+        mock_summary1.tardy_count = 0
+        mock_summary1.attendance_percentage = 95.0
+        mock_summary1.total_late_minutes = 0
+        mock_summary1.created_at = datetime.now()
+        mock_summary1.updated_at = datetime.now()
+        mock_summary1.student = {"id": 1, "first_name": "John", "last_name": "Doe"}
+        mock_summary1.course = {"id": 1, "title": "Introduction to Programming"}
         
         mock_summary2 = Mock()
+        mock_summary2.id = 2
         mock_summary2.student_id = 2
-        mock_summary2.attendance_percentage = 65.0
+        mock_summary2.course_id = 1
+        mock_summary2.semester = "Fall"
+        mock_summary2.year = 2024
+        mock_summary2.total_sessions = 20
+        mock_summary2.present_count = 13
         mock_summary2.absent_count = 5
-        mock_summary2.student = Mock()
-        mock_summary2.student.first_name = "Jane"
-        mock_summary2.student.last_name = "Smith"
+        mock_summary2.late_count = 2
+        mock_summary2.excused_count = 0
+        mock_summary2.tardy_count = 0
+        mock_summary2.attendance_percentage = 65.0
+        mock_summary2.total_late_minutes = 30
+        mock_summary2.created_at = datetime.now()
+        mock_summary2.updated_at = datetime.now()
+        mock_summary2.student = {"id": 2, "first_name": "Jane", "last_name": "Smith"}
+        mock_summary2.course = {"id": 1, "title": "Introduction to Programming"}
         
         service.db.query.return_value.filter.return_value.first.return_value = mock_course
         mock_repository.get_course_attendance_summaries.return_value = [mock_summary1, mock_summary2]

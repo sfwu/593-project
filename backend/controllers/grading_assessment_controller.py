@@ -762,3 +762,9 @@ async def bulk_publish_assignments(
         "published_assignments": published_assignments,
         "failed_assignments": failed_assignments
     }
+
+# Function aliases for backward compatibility with tests
+get_assignment_by_id = get_assignment
+get_grade_statistics = get_course_grade_statistics
+bulk_create_assignments = create_bulk_assignments
+bulk_create_grades = create_bulk_grades

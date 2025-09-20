@@ -13,11 +13,12 @@ from schemas.grading_assessment_schemas import (
     GradingDashboardSummary, CourseGradingSummary, GradeDistributionReport,
     AssignmentAnalytics, ExamAnalytics, AssignmentType, ExamType, GradeStatus, SubmissionStatus
 )
-from models.grading_assessment import AssignmentType, ExamType, GradeStatus, SubmissionStatus
+from models.grading_assessment import AssignmentType, ExamType, GradeStatus, SubmissionStatus, Assignment, Exam, Grade
 from models.student import Student
 from models.course import Course
 from models.professor import Professor
 from datetime import datetime, date, timedelta
+from sqlalchemy import and_
 import json
 import statistics
 

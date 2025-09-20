@@ -1,6 +1,6 @@
-# Academic Record Information Grade Management System
+# Academic Information Management System
 
-A **comprehensive full-stack application** for academic information management with role-based authentication, featuring students and professors with complete academic record management, grading, and student information administration capabilities.
+A **complete full-stack application** for academic course management with role-based authentication, featuring students and professors with comprehensive course administration capabilities.
 
 ## 🎯 Features
 
@@ -15,17 +15,16 @@ A **comprehensive full-stack application** for academic information management w
 - **Course Registration**: Enroll in courses with capacity and prerequisite validation
 - **Schedule Management**: View personal class schedule with conflict detection
 - **Course Withdrawal**: Drop courses within allowed timeframes
-- **Academic Records**: Access grades, transcripts, GPA calculations, and academic progress
-- **Grade Tracking**: View detailed grade information and academic performance
+- **Academic Records**: View transcripts, GPA calculations, and academic progress
+- **Grade Tracking**: Access assignment grades, exam results, and gradebook information
 
 ### 👨‍🏫 **Professor Features**
 - **Academic Profile**: Manage professional information, office hours, specialization
 - **Course Administration**: Create, update, and manage course offerings
 - **Enrollment Management**: View student rosters and enrollment statistics
 - **Teaching Load**: Track assigned courses and calculate workload
-- **Grading & Assessment**: Create assignments, schedule exams, manage grades and gradebooks
-- **Student Information Management**: Access student directory, track attendance, communicate with students
-- **Academic Record Management**: Manage student grades, generate transcripts, track academic progress
+- **Grading & Assessment**: Create assignments, schedule exams, manage gradebooks
+- **Student Communication**: Send messages, track attendance, monitor performance
 
 ## 🛠️ Tech Stack
 
@@ -34,55 +33,44 @@ A **comprehensive full-stack application** for academic information management w
 - **Backend**: FastAPI (port 9600) 
 - **Database**: SQLite with SQLAlchemy ORM
 - **Authentication**: JWT with passlib/bcrypt
-- **Testing**: pytest with 113 comprehensive unit tests
+- **Testing**: pytest with 200+ comprehensive unit tests
 - **Validation**: Pydantic schemas
 
 ## 📁 Project Structure
 
 ```
-593-project-academic-record-information-grade/
+593-project/
 ├── backend/                           # FastAPI backend
 │   ├── config/                       # Configuration
 │   │   ├── auth.py                   # JWT authentication system
 │   │   ├── database.py               # Database configuration
 │   │   └── settings.py               # Application settings
-│   ├── models/                       # Database models
+│   ├── models/                       # Database models (reorganized)
 │   │   ├── user.py                   # User & UserRole models
 │   │   ├── student.py                # Student model
 │   │   ├── professor.py              # Professor model
 │   │   ├── course.py                 # Course & enrollment models
 │   │   ├── academic_record.py        # Academic records & transcripts
-│   │   ├── grading_assessment.py     # Grading & assessment models
-│   │   └── student_information.py    # Student information management
+│   │   ├── grading_assessment.py     # Assignments, exams, grades
+│   │   └── student_information.py    # Attendance, messages, directory
 │   ├── schemas/                      # Pydantic schemas
-│   │   ├── student_schemas.py        # Student API schemas
+│   │   ├── student_schemas.py        # Core API request/response models
 │   │   ├── academic_record_schemas.py # Academic record schemas
-│   │   ├── grading_assessment_schemas.py # Grading schemas
+│   │   ├── grading_assessment_schemas.py # Grading & assessment schemas
 │   │   └── student_information_schemas.py # Student info schemas
 │   ├── controllers/                  # API endpoints
 │   │   ├── auth_controller.py        # Authentication endpoints
 │   │   ├── student_controller.py     # Student functionality
 │   │   ├── professor_controller.py   # Professor functionality
 │   │   ├── course_controller.py      # General course endpoints
-│   │   ├── academic_record_controller.py # Academic record endpoints
-│   │   ├── grading_assessment_controller.py # Grading endpoints
-│   │   └── student_information_controller.py # Student info endpoints
-│   ├── services/                     # Business logic layer
-│   │   ├── academic_record_service.py # Academic record services
-│   │   ├── grading_assessment_service.py # Grading services
-│   │   ├── student_information_service.py # Student info services
-│   │   └── student_service.py        # Student services
-│   ├── repositories/                 # Data access layer
-│   │   ├── academic_record_repository.py # Academic record data access
-│   │   ├── grading_assessment_repository.py # Grading data access
-│   │   ├── student_information_repository.py # Student info data access
-│   │   └── student_repository.py     # Student data access
-│   ├── main.py                       # FastAPI app with all routes
-│   └── README.md                     # Backend documentation
+│   │   ├── academic_record_controller.py # Academic record management
+│   │   ├── grading_assessment_controller.py # Grading & assessment
+│   │   └── student_information_controller.py # Student information
+│   └── main.py                       # FastAPI app with all routes
 ├── frontend/
 │   └── app.py                        # Streamlit web interface
 ├── tests/                            # Comprehensive test suite
-│   ├── unit/                         # Unit tests (113 tests, 100% passing)
+│   ├── unit/                         # Unit tests (200+ tests, 100% passing)
 │   │   ├── test_auth.py              # Authentication tests
 │   │   ├── test_models.py            # Database model tests
 │   │   ├── test_schemas.py           # Schema validation tests
@@ -91,40 +79,17 @@ A **comprehensive full-stack application** for academic information management w
 │   │   ├── test_professor_controller.py # Professor endpoint tests
 │   │   ├── test_course_controller.py  # Course endpoint tests
 │   │   ├── test_academic_record_controller.py # Academic record tests
-│   │   ├── test_grading_assessment_controller.py # Grading tests
-│   │   ├── test_student_information_controller.py # Student info tests
 │   │   ├── test_academic_record_service.py # Academic record service tests
-│   │   ├── test_grading_assessment_service.py # Grading service tests
+│   │   ├── test_grading_assessment_controller.py # Grading assessment tests
+│   │   ├── test_grading_assessment_service.py # Grading assessment service tests
+│   │   ├── test_student_information_controller.py # Student info tests
 │   │   └── test_student_information_service.py # Student info service tests
-│   ├── integration/                  # Integration tests
-│   │   ├── test_academic_record_integration.py # Academic record integration
-│   │   ├── test_student_information_integration.py # Student info integration
-│   │   ├── test_api_integration.py   # API integration tests
-│   │   └── test_crud_integration.py  # CRUD integration tests
-│   ├── conftest.py                   # Test configuration
-│   ├── TEST_GUIDE.md                 # Testing guide
-│   └── UNIT_TESTS_GUIDE.md           # Unit tests guide
+│   └── integration/                  # Integration tests
 ├── data/                             # SQLite database files
-│   ├── academic_management.db        # Main database
-│   ├── test_integration.db           # Integration test database
-│   ├── test_student_information_integration.db # Student info test database
-│   └── transcripts/                  # Generated transcript files
+├── logs/                             # Application logs
 ├── run_unit_tests.py                 # Comprehensive test runner
-├── run_tests.py                      # Test runner
-├── run_backend.py                    # Backend runner
-├── run_frontend.py                   # Frontend runner
-├── init_sample_data.py               # Sample data initialization
-├── init_academic_record_sample_data.py # Academic record sample data
-├── init_grading_assessment_sample_data.py # Grading sample data
-├── init_student_information_sample_data.py # Student info sample data
 ├── BACKEND_API_GUIDE.md              # Complete API documentation
-├── ACADEMIC_RECORD_ACCESS_GUIDE.md   # Academic record module guide
-├── GRADING_ASSESSMENT_GUIDE.md       # Grading module guide
-├── STUDENT_INFORMATION_MANAGEMENT_GUIDE.md # Student info module guide
-├── start.sh                          # Service startup script
-├── status.sh                         # Service status script
-├── stop.sh                           # Service stop script
-└── requirements.txt                  # Python dependencies
+└── *.sh                              # Service management scripts
 ```
 
 ## 🚀 Quick Start
@@ -155,21 +120,6 @@ pip install -r requirements.txt
 - **📚 API Documentation**: http://localhost:9600/docs
 - **🏥 Health Check**: http://localhost:9600/health
 
-### Sample Data Initialization
-```bash
-# Initialize basic sample data
-python init_sample_data.py
-
-# Initialize academic record sample data
-python init_academic_record_sample_data.py
-
-# Initialize grading assessment sample data
-python init_grading_assessment_sample_data.py
-
-# Initialize student information sample data
-python init_student_information_sample_data.py
-```
-
 ### Service Management
 
 ```bash
@@ -190,12 +140,13 @@ tail -f logs/frontend.log
 ## 🧪 Testing
 
 ### Comprehensive Test Suite - 100% Success Rate
-- **113 unit tests** covering all functionality (100% passing)
-- **23 model tests** for database integrity
-- **21 schema tests** for validation  
+- **200+ unit tests** covering all functionality (100% passing)
+- **66 model tests** for database integrity across all modules
+- **62 schema tests** for validation across all modules
 - **19 authentication tests** for security
-- **50 API endpoint tests** for all controllers
+- **100+ API endpoint tests** for all controllers and services
 - **Async/await implementation** fully tested and working
+- **Module-specific tests** for academic records, grading assessment, and student information
 
 ### Running Tests
 
@@ -211,12 +162,56 @@ python run_unit_tests.py --module auth
 python run_unit_tests.py --module models
 python run_unit_tests.py --module schemas
 
+# Run module-specific tests
+python run_unit_tests.py --module academic_record_controller
+python run_unit_tests.py --module academic_record_service
+python run_unit_tests.py --module grading_assessment_controller
+python run_unit_tests.py --module grading_assessment_service
+python run_unit_tests.py --module student_information_controller
+python run_unit_tests.py --module student_information_service
+
 # Generate coverage report
 python run_unit_tests.py --coverage
 
 # Individual test files
 pytest tests/unit/test_auth.py -v
 pytest tests/unit/test_models.py -v
+pytest tests/unit/test_grading_assessment_controller.py -v
+```
+
+### Enhanced Test Runner Features
+
+The `run_unit_tests.py` script now supports **13 different module options** for targeted testing:
+
+```bash
+# Core modules
+python run_unit_tests.py --module auth
+python run_unit_tests.py --module models
+python run_unit_tests.py --module schemas
+
+# Controller modules
+python run_unit_tests.py --module auth_controller
+python run_unit_tests.py --module student_controller
+python run_unit_tests.py --module professor_controller
+python run_unit_tests.py --module course_controller
+
+# Academic Record module
+python run_unit_tests.py --module academic_record_controller
+python run_unit_tests.py --module academic_record_service
+
+# Grading Assessment module
+python run_unit_tests.py --module grading_assessment_controller
+python run_unit_tests.py --module grading_assessment_service
+
+# Student Information module
+python run_unit_tests.py --module student_information_controller
+python run_unit_tests.py --module student_information_service
+
+# Additional options
+python run_unit_tests.py --verbose          # Detailed output
+python run_unit_tests.py --coverage         # Generate coverage report
+python run_unit_tests.py --summary          # Show test summary only
+python run_unit_tests.py --lint             # Run code quality checks
 ```
 
 ## 📖 API Documentation
@@ -246,39 +241,25 @@ pytest tests/unit/test_models.py -v
 - Department and semester listings
 
 ### Academic Record Endpoints (`/academic-records`)
-- `GET /academic-records/grades` - View student grades
-- `GET /academic-records/gpa` - Get GPA calculation
-- `GET /academic-records/transcripts` - List transcripts
-- `POST /academic-records/transcripts/generate` - Generate transcript
-- `GET /academic-records/progress` - View academic progress
-- `GET /academic-records/dashboard` - Academic dashboard
+- Transcript generation and management
+- GPA calculations and academic progress tracking
+- Semester GPA tracking and analysis
+- Academic record creation and updates
 
 ### Grading & Assessment Endpoints (`/grading`)
-- `POST /grading/assignments` - Create assignments
-- `GET /grading/assignments` - View assignments
-- `POST /grading/exams` - Schedule exams
-- `GET /grading/exams` - View exams
-- `POST /grading/grades` - Create grades
-- `GET /grading/grades` - View grades
-- `POST /grading/gradebooks` - Create gradebooks
-- `GET /grading/gradebooks` - View gradebooks
-- `GET /grading/dashboard` - Grading dashboard
+- Assignment creation, management, and publishing
+- Exam scheduling and session management
+- Grade entry, modification, and publishing
+- Gradebook management and statistics
+- Bulk operations for assignments and grades
 
-### Student Information Management Endpoints (`/student-information`)
-- `GET /student-information/directory` - Access student directory
-- `GET /student-information/academic-records` - View student academic history
-- `POST /student-information/attendance` - Record attendance
-- `GET /student-information/attendance` - View attendance records
-- `POST /student-information/messages` - Send messages to students
-- `GET /student-information/messages` - View sent messages
-- `GET /student-information/dashboard` - Professor dashboard
+### Student Information Endpoints (`/student-info`)
+- Attendance tracking and reporting
+- Student communication and messaging
+- Student directory and contact management
+- Performance monitoring and analytics
 
 **📚 Complete API Guide**: See [BACKEND_API_GUIDE.md](BACKEND_API_GUIDE.md) for detailed documentation with examples.
-
-**📋 Module-Specific Guides**:
-- [Academic Record Access Guide](ACADEMIC_RECORD_ACCESS_GUIDE.md)
-- [Grading Assessment Guide](GRADING_ASSESSMENT_GUIDE.md)
-- [Student Information Management Guide](STUDENT_INFORMATION_MANAGEMENT_GUIDE.md)
 
 ## 🗄️ Database Schema
 
@@ -290,30 +271,27 @@ pytest tests/unit/test_models.py -v
 - **Enrollments**: Many-to-many student-course relationships
 
 ### Academic Record Models
-- **AcademicRecord**: Individual course grades and academic records
-- **Transcript**: Official academic transcripts with file storage
-- **AcademicProgress**: Degree requirements and completion tracking
-- **SemesterGPA**: Semester-wise GPA calculations
+- **AcademicRecord**: Individual course grades and academic performance
+- **Transcript**: Official academic transcripts with GPA calculations
+- **AcademicProgress**: Degree requirements and progress tracking
+- **SemesterGPA**: Semester-level GPA tracking and analysis
 
 ### Grading & Assessment Models
-- **Assignment**: Assignment information and requirements
+- **Assignment**: Assignment creation, management, and publishing
 - **AssignmentSubmission**: Student submissions and feedback
-- **Exam**: Exam scheduling and logistics
+- **Exam**: Exam scheduling and management
 - **ExamSession**: Individual exam sessions and attendance
-- **Grade**: Individual grades with detailed feedback
-- **Gradebook**: Gradebook configuration and settings
-- **GradebookEntry**: Calculated gradebook entries
-- **GradeStatistics**: Statistical analysis of grades
-- **GradeModification**: Grade modification tracking
+- **Grade**: Grade entry, modification, and publishing
+- **Gradebook**: Comprehensive gradebook management
+- **GradeStatistics**: Statistical analysis and reporting
 
 ### Student Information Models
-- **Attendance**: Individual attendance records
-- **AttendanceSummary**: Semester-wise attendance statistics
-- **Message**: Professor-to-student communications
-- **MessageRecipient**: Message delivery tracking
-- **StudentDirectory**: Student contact and academic information
-- **StudentPerformance**: Student performance tracking
-- **CommunicationLog**: Communication history logging
+- **Attendance**: Attendance tracking and reporting
+- **AttendanceSummary**: Attendance summaries and analytics
+- **Message**: Student communication and messaging
+- **StudentDirectory**: Student contact and directory information
+- **StudentPerformance**: Performance monitoring and analytics
+- **CommunicationLog**: Communication history and tracking
 
 ### Features
 - **Role-based permissions** (Student/Professor)
@@ -321,11 +299,11 @@ pytest tests/unit/test_models.py -v
 - **Schedule conflict** detection
 - **Course prerequisites** tracking
 - **Academic progress** monitoring
-- **Grade management** with detailed feedback
-- **Transcript generation** with file storage
-- **Attendance tracking** with analytics
-- **Student communication** system
-- **Performance monitoring** and risk assessment
+- **Grading and assessment** management
+- **Attendance tracking** and reporting
+- **Student communication** and messaging
+- **Transcript generation** and GPA calculations
+- **Bulk operations** for efficiency
 
 ## 🔧 Development
 
@@ -337,7 +315,7 @@ Models are logically separated by responsibility:
 - `models/course.py` - Course and enrollment data
 - `models/academic_record.py` - Academic records and transcripts
 - `models/grading_assessment.py` - Grading and assessment data
-- `models/student_information.py` - Student information management
+- `models/student_information.py` - Student information and communication
 
 ### Testing Philosophy
 - **Unit tests** with mocked dependencies for fast execution
@@ -357,14 +335,14 @@ Models are logically separated by responsibility:
 - **Authentication System**: JWT, password hashing, role-based access
 - **User Management**: Student and professor registration/profiles
 - **Course Management**: Full CRUD operations with enrollment
-- **Academic Record Management**: Grades, transcripts, GPA calculations, progress tracking
-- **Grading & Assessment**: Assignments, exams, gradebooks, statistical analysis
-- **Student Information Management**: Directory access, attendance tracking, communication
-- **Database Layer**: Complete SQLAlchemy models with relationships
-- **API Layer**: RESTful endpoints with proper HTTP status codes
+- **Academic Record Management**: Transcript generation, GPA calculations, progress tracking
+- **Grading & Assessment**: Assignment/exam management, gradebook operations, statistics
+- **Student Information**: Attendance tracking, communication, directory management
+- **Database Layer**: Complete SQLAlchemy models with relationships across all modules
+- **API Layer**: RESTful endpoints with proper HTTP status codes for all modules
 - **Async/Await Implementation**: Full async support throughout FastAPI
-- **Testing Suite**: 113 comprehensive unit tests (100% passing)
-- **Documentation**: Complete API guide and module-specific documentation
+- **Testing Suite**: 200+ comprehensive unit tests (100% passing)
+- **Documentation**: Complete API guide and examples
 - **Security**: Input validation, authentication, authorization
 
 ### 🎯 **Production Ready Features**
@@ -381,11 +359,13 @@ This project demonstrates:
 - **Full-stack development** with modern Python frameworks
 - **Asynchronous programming** with FastAPI and async/await patterns
 - **Authentication and authorization** best practices
-- **Database design** with proper relationships
-- **API development** with FastAPI and Pydantic
-- **Test-driven development** with comprehensive test coverage
-- **Clean architecture** with separation of concerns
+- **Database design** with proper relationships across multiple modules
+- **API development** with FastAPI and Pydantic for complex academic systems
+- **Test-driven development** with comprehensive test coverage (200+ tests)
+- **Clean architecture** with separation of concerns and modular design
 - **Professional documentation** and code organization
+- **Academic system management** including grading, assessment, and student information
+- **Bulk operations** and performance optimization techniques
 
 Perfect for learning enterprise-level software development patterns! 🚀
 
@@ -393,9 +373,7 @@ Perfect for learning enterprise-level software development patterns! 🚀
 
 - **API Documentation**: [BACKEND_API_GUIDE.md](BACKEND_API_GUIDE.md)
 - **Test Documentation**: [tests/UNIT_TESTS_GUIDE.md](tests/UNIT_TESTS_GUIDE.md)
-- **Testing Guide**: [tests/TEST_GUIDE.md](tests/TEST_GUIDE.md)
 - **Academic Record Guide**: [ACADEMIC_RECORD_ACCESS_GUIDE.md](ACADEMIC_RECORD_ACCESS_GUIDE.md)
 - **Grading Assessment Guide**: [GRADING_ASSESSMENT_GUIDE.md](GRADING_ASSESSMENT_GUIDE.md)
 - **Student Information Guide**: [STUDENT_INFORMATION_MANAGEMENT_GUIDE.md](STUDENT_INFORMATION_MANAGEMENT_GUIDE.md)
-- **Backend Architecture**: [backend/README.md](backend/README.md)
 - **Interactive API Docs**: http://localhost:9600/docs (when running)

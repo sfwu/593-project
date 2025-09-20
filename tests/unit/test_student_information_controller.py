@@ -61,8 +61,8 @@ class TestStudentInformationController:
             late_minutes=0,
             session_topic="Introduction to Programming",
             session_duration=90,
+            recorded_at=datetime.now(),
             recorded_by=1,
-            created_at=datetime.now(),
             updated_at=datetime.now()
         )
     
@@ -80,7 +80,8 @@ class TestStudentInformationController:
             is_broadcast=True,
             status=MessageStatus.DRAFT,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            sent_at=None,
+            scheduled_at=None
         )
     
     @pytest.fixture
@@ -187,11 +188,11 @@ class TestStudentInformationController:
         """Test student directory update"""
         # Mock service instance
         mock_service = Mock()
-        mock_service.update_student_directory.return_value = mock_student_directory_response
+        mock_service.update_student_directory_entry.return_value = mock_student_directory_response
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.student_information_controller import update_student_directory
+        from controllers.student_information_controller import update_student_directory_entry
         
         # Create update data
         update_data = StudentDirectoryUpdate(
@@ -201,15 +202,15 @@ class TestStudentInformationController:
         )
         
         # Call the function
-        result = await update_student_directory(
+        result = await update_student_directory_entry(
             student_id=1,
-            directory_update=update_data,
+            directory_data=update_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.update_student_directory.assert_called_once_with(1, update_data)
+        mock_service.update_student_directory_entry.assert_called_once_with(1, update_data)
         assert result == mock_student_directory_response
 
     # Academic Records Tests
@@ -219,7 +220,7 @@ class TestStudentInformationController:
         """Test retrieval of student academic records"""
         # Mock service instance
         mock_service = Mock()
-        mock_service.get_student_academic_records.return_value = [mock_student_performance_response]
+        mock_service.get_student_performance.return_value = mock_student_performance_response
         mock_service_class.return_value = mock_service
         
         # Import the function
@@ -233,7 +234,9 @@ class TestStudentInformationController:
         )
         
         # Assertions
-        mock_service.get_student_academic_records.assert_called_once_with(1)
+        mock_service.get_student_performance.assert_called_once()
+        # Check that the first argument is 1 (student_id)
+        assert mock_service.get_student_performance.call_args[0][0] == 1
         assert result == [mock_student_performance_response]
     
     @patch('controllers.student_information_controller.StudentInformationService')
@@ -242,21 +245,21 @@ class TestStudentInformationController:
         """Test retrieval of course academic records"""
         # Mock service instance
         mock_service = Mock()
-        mock_service.get_course_academic_records.return_value = [mock_student_performance_response]
+        mock_service.get_course_student_performance.return_value = [mock_student_performance_response]
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.student_information_controller import get_course_academic_records
+        from controllers.student_information_controller import get_course_student_performance
         
         # Call the function
-        result = await get_course_academic_records(
+        result = await get_course_student_performance(
             course_id=1,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.get_course_academic_records.assert_called_once_with(1)
+        mock_service.get_course_student_performance.assert_called_once_with(1)
         assert result == [mock_student_performance_response]
     
     @patch('controllers.student_information_controller.StudentInformationService')
@@ -281,13 +284,13 @@ class TestStudentInformationController:
         # Call the function
         result = await update_student_performance(
             performance_id=1,
-            performance_update=update_data,
+            performance_data=update_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.update_student_performance.assert_called_once_with(1, update_data)
+        mock_service.update_student_performance.assert_called_once_with(1, update_data, 1)
         assert result == mock_student_performance_response
     
     @patch('controllers.student_information_controller.StudentInformationService')
@@ -296,20 +299,20 @@ class TestStudentInformationController:
         """Test retrieval of at-risk students"""
         # Mock service instance
         mock_service = Mock()
-        mock_service.get_at_risk_students.return_value = [mock_student_performance_response]
+        mock_service.get_students_at_risk.return_value = [mock_student_performance_response]
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.student_information_controller import get_at_risk_students
+        from controllers.student_information_controller import get_students_at_risk
         
         # Call the function
-        result = await get_at_risk_students(
+        result = await get_students_at_risk(
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.get_at_risk_students.assert_called_once()
+        mock_service.get_students_at_risk.assert_called_once()
         assert result == [mock_student_performance_response]
     
     @patch('controllers.student_information_controller.StudentInformationService')
@@ -325,21 +328,22 @@ class TestStudentInformationController:
             "recommendations": ["Schedule meeting", "Provide additional support"],
             "last_assessed": datetime.now()
         }
-        mock_service.get_student_risk_assessment.return_value = mock_risk_assessment
+        mock_service.assess_student_risk.return_value = mock_risk_assessment
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.student_information_controller import get_student_risk_assessment
+        from controllers.student_information_controller import assess_student_risk
         
         # Call the function
-        result = await get_student_risk_assessment(
+        result = await assess_student_risk(
             student_id=1,
+            course_id=1,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.get_student_risk_assessment.assert_called_once_with(1)
+        mock_service.assess_student_risk.assert_called_once_with(1, 1)
         assert result == mock_risk_assessment
 
     # Attendance Management Tests
@@ -384,35 +388,35 @@ class TestStudentInformationController:
         """Test bulk attendance creation"""
         # Mock service instance
         mock_service = Mock()
-        mock_service.bulk_create_attendance.return_value = [mock_attendance_response]
+        mock_service.create_bulk_attendance.return_value = [mock_attendance_response]
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.student_information_controller import bulk_create_attendance
+        from controllers.student_information_controller import create_bulk_attendance
         
         # Create bulk data
         bulk_data = BulkAttendanceCreate(
             course_id=1,
             attendance_date=datetime.now(),
-            attendances=[
-                AttendanceCreate(
-                    student_id=1,
-                    course_id=1,
-                    attendance_date=datetime.now(),
-                    status=AttendanceStatus.PRESENT
-                )
+            attendance_records=[
+                {
+                    "student_id": 1,
+                    "course_id": 1,
+                    "attendance_date": datetime.now(),
+                    "status": AttendanceStatus.PRESENT
+                }
             ]
         )
         
         # Call the function
-        result = await bulk_create_attendance(
+        result = await create_bulk_attendance(
             bulk_data=bulk_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.bulk_create_attendance.assert_called_once_with(bulk_data, 1)
+        mock_service.create_bulk_attendance.assert_called_once_with(bulk_data, 1)
         assert result == [mock_attendance_response]
     
     @patch('controllers.student_information_controller.StudentInformationService')
@@ -421,14 +425,14 @@ class TestStudentInformationController:
         """Test retrieval of attendance records"""
         # Mock service instance
         mock_service = Mock()
-        mock_service.get_attendance.return_value = [mock_attendance_response]
+        mock_service.get_attendance_records.return_value = [mock_attendance_response]
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.student_information_controller import get_attendance
+        from controllers.student_information_controller import get_attendance_records
         
         # Call the function
-        result = await get_attendance(
+        result = await get_attendance_records(
             course_id=1,
             student_id=1,
             date_from=datetime.now() - timedelta(days=30),
@@ -439,7 +443,12 @@ class TestStudentInformationController:
         )
         
         # Assertions
-        mock_service.get_attendance.assert_called_once()
+        mock_service.get_attendance_records.assert_called_once()
+        # Check the call was made with the correct parameters
+        call_args = mock_service.get_attendance_records.call_args
+        assert call_args.kwargs['course_id'] == 1
+        assert call_args.kwargs['student_id'] == 1
+        assert call_args.kwargs['status'] == AttendanceStatus.PRESENT
         assert result == [mock_attendance_response]
     
     @patch('controllers.student_information_controller.StudentInformationService')
@@ -452,7 +461,7 @@ class TestStudentInformationController:
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.student_information_controller import update_attendance
+        from controllers.student_information_controller import update_attendance_record
         
         # Create update data
         update_data = AttendanceUpdate(
@@ -462,15 +471,15 @@ class TestStudentInformationController:
         )
         
         # Call the function
-        result = await update_attendance(
+        result = await update_attendance_record(
             attendance_id=1,
-            attendance_update=update_data,
+            attendance_data=update_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.update_attendance.assert_called_once_with(1, update_data)
+        mock_service.update_attendance.assert_called_once_with(1, update_data, 1)
         assert result == mock_attendance_response
     
     @patch('controllers.student_information_controller.StudentInformationService')
@@ -480,6 +489,7 @@ class TestStudentInformationController:
         # Mock service instance
         mock_service = Mock()
         mock_summary = AttendanceSummaryResponse(
+            id=1,
             student_id=1,
             course_id=1,
             semester="Fall",
@@ -504,12 +514,13 @@ class TestStudentInformationController:
         # Call the function
         result = await get_attendance_summary(
             student_id=1,
+            course_id=1,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.get_attendance_summary.assert_called_once_with(1)
+        mock_service.get_attendance_summary.assert_called_once_with(1, 1)
         assert result == mock_summary
 
     # Message Management Tests
@@ -527,14 +538,13 @@ class TestStudentInformationController:
         
         # Create message data
         message_data = MessageCreate(
-            sender_id=1,
             course_id=1,
             subject="Assignment Due Date",
             content="Please remember that the assignment is due next week.",
             message_type=MessageType.ASSIGNMENT,
             priority=MessagePriority.HIGH,
             is_broadcast=True,
-            status=MessageStatus.DRAFT
+            recipient_ids=[1, 2, 3]
         )
         
         # Call the function
@@ -565,7 +575,6 @@ class TestStudentInformationController:
             course_id=1,
             message_type=MessageType.ASSIGNMENT,
             status=MessageStatus.DRAFT,
-            priority=MessagePriority.HIGH,
             current_professor=mock_professor,
             db=mock_db
         )
@@ -589,20 +598,19 @@ class TestStudentInformationController:
         # Create update data
         update_data = MessageUpdate(
             subject="Updated Subject",
-            content="Updated content",
-            status=MessageStatus.SENT
+            content="Updated content"
         )
         
         # Call the function
         result = await update_message(
             message_id=1,
-            message_update=update_data,
+            message_data=update_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.update_message.assert_called_once_with(1, update_data)
+        mock_service.update_message.assert_called_once_with(1, update_data, 1)
         assert result == mock_message_response
     
     @patch('controllers.student_information_controller.StudentInformationService')
@@ -625,7 +633,7 @@ class TestStudentInformationController:
         )
         
         # Assertions
-        mock_service.send_message.assert_called_once_with(1)
+        mock_service.send_message.assert_called_once_with(1, 1)
         assert result == mock_message_response
     
     @patch('controllers.student_information_controller.StudentInformationService')
@@ -634,36 +642,33 @@ class TestStudentInformationController:
         """Test bulk message creation"""
         # Mock service instance
         mock_service = Mock()
-        mock_service.bulk_create_messages.return_value = [mock_message_response]
+        mock_service.create_message.return_value = mock_message_response
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.student_information_controller import bulk_create_messages
+        from controllers.student_information_controller import create_bulk_messages
         
         # Create bulk data
         bulk_data = BulkMessageCreate(
             course_id=1,
-            messages=[
-                MessageCreate(
-                    sender_id=1,
-                    subject="Test Message",
-                    content="This is a test message.",
-                    message_type=MessageType.GENERAL,
-                    priority=MessagePriority.NORMAL
-                )
-            ]
+            subject="Test Message",
+            content="This is a test message.",
+            message_type=MessageType.GENERAL,
+            priority=MessagePriority.NORMAL,
+            recipient_ids=[1, 2, 3]
         )
         
         # Call the function
-        result = await bulk_create_messages(
+        result = await create_bulk_messages(
             bulk_data=bulk_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.bulk_create_messages.assert_called_once_with(bulk_data, 1)
-        assert result == [mock_message_response]
+        # The function should call create_message for each recipient
+        assert mock_service.create_message.call_count == 3  # 3 recipients
+        assert len(result) == 3
 
     # Dashboard and Analytics Tests
     @patch('controllers.student_information_controller.StudentInformationService')
@@ -676,14 +681,12 @@ class TestStudentInformationController:
             professor_id=1,
             total_students=50,
             total_courses=3,
-            at_risk_students=5,
-            recent_attendance_rate=85.0,
             pending_messages=10,
-            upcoming_deadlines=3,
-            recent_activities=[],
-            generated_at=datetime.now()
+            students_at_risk=5,
+            attendance_alerts=3,
+            recent_communications=15
         )
-        mock_service.get_professor_dashboard.return_value = mock_dashboard
+        mock_service.get_professor_dashboard_summary.return_value = mock_dashboard
         mock_service_class.return_value = mock_service
         
         # Import the function
@@ -696,7 +699,7 @@ class TestStudentInformationController:
         )
         
         # Assertions
-        mock_service.get_professor_dashboard.assert_called_once_with(1)
+        mock_service.get_professor_dashboard_summary.assert_called_once_with(1)
         assert result == mock_dashboard
     
     @patch('controllers.student_information_controller.StudentInformationService')
@@ -707,16 +710,17 @@ class TestStudentInformationController:
         mock_service = Mock()
         mock_dashboard = StudentDashboardSummary(
             student_id=1,
-            current_gpa=3.5,
-            attendance_rate=90.0,
+            student_name="John Doe",
+            student_email="john.doe@example.com",
             courses_enrolled=5,
-            assignments_due=3,
-            recent_grades=[],
-            attendance_summary=[],
-            messages_unread=2,
-            generated_at=datetime.now()
+            total_attendance_percentage=90.0,
+            average_grade=3.5,
+            unread_messages=2,
+            upcoming_assignments=3,
+            is_at_risk=False,
+            last_contact_date=datetime.now()
         )
-        mock_service.get_student_dashboard.return_value = mock_dashboard
+        mock_service.get_student_dashboard_summary.return_value = mock_dashboard
         mock_service_class.return_value = mock_service
         
         # Import the function
@@ -730,7 +734,7 @@ class TestStudentInformationController:
         )
         
         # Assertions
-        mock_service.get_student_dashboard.assert_called_once_with(1)
+        mock_service.get_student_dashboard_summary.assert_called_once_with(1)
         assert result == mock_dashboard
 
     # Communication Logs Tests
@@ -751,8 +755,8 @@ class TestStudentInformationController:
             direction="sent",
             requires_follow_up=True,
             follow_up_date=datetime.now(),
-            created_at=datetime.now(),
-            updated_at=datetime.now()
+            communication_date=datetime.now(),
+            created_at=datetime.now()
         )
         mock_service.get_communication_logs.return_value = [mock_log]
         mock_service_class.return_value = mock_service
@@ -765,7 +769,6 @@ class TestStudentInformationController:
             student_id=1,
             course_id=1,
             communication_type="email",
-            requires_follow_up=True,
             current_professor=mock_professor,
             db=mock_db
         )

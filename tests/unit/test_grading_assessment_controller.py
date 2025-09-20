@@ -63,6 +63,7 @@ class TestGradingAssessmentController:
             total_points=100.0,
             weight_percentage=15.0,
             due_date=datetime(2024, 12, 31, 23, 59, 59),
+            assigned_date=datetime.now(),
             is_published=False,
             is_active=True,
             created_at=datetime.now(),
@@ -109,6 +110,8 @@ class TestGradingAssessmentController:
             letter_grade="B",
             grade_status=GradeStatus.PUBLISHED,
             is_late=False,
+            graded_date=datetime.now(),
+            is_modified=False,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -181,14 +184,14 @@ class TestGradingAssessmentController:
         # Import the function
         from controllers.grading_assessment_controller import create_assignment
         
-        # Create invalid assignment data
+        # Create invalid assignment data (past due date)
         assignment_data = AssignmentCreate(
             course_id=1,
-            title="",  # Invalid empty title
+            title="Test Assignment",
             assignment_type=AssignmentType.HOMEWORK,
             total_points=100.0,
             weight_percentage=15.0,
-            due_date=datetime(2024, 12, 31, 23, 59, 59)
+            due_date=datetime(2023, 1, 1, 23, 59, 59)  # Past date
         )
         
         # Call the function and expect HTTPException
@@ -272,13 +275,13 @@ class TestGradingAssessmentController:
         # Call the function
         result = await update_assignment(
             assignment_id=1,
-            assignment_update=update_data,
+            assignment_data=update_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.update_assignment.assert_called_once_with(1, update_data)
+        mock_service.update_assignment.assert_called_once_with(1, update_data, 1)
         assert result == mock_assignment_response
     
     @patch('controllers.grading_assessment_controller.GradingAssessmentService')
@@ -301,7 +304,7 @@ class TestGradingAssessmentController:
         )
         
         # Assertions
-        mock_service.publish_assignment.assert_called_once_with(1)
+        mock_service.publish_assignment.assert_called_once_with(1, 1)
         assert result == mock_assignment_response
     
     @patch('controllers.grading_assessment_controller.GradingAssessmentService')
@@ -324,7 +327,7 @@ class TestGradingAssessmentController:
         )
         
         # Assertions
-        mock_service.delete_assignment.assert_called_once_with(1)
+        mock_service.delete_assignment.assert_called_once_with(1, 1)
         assert result == {"message": "Assignment deleted successfully"}
 
     # Exam Management Tests
@@ -416,13 +419,13 @@ class TestGradingAssessmentController:
         # Call the function
         result = await update_exam(
             exam_id=1,
-            exam_update=update_data,
+            exam_data=update_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.update_exam.assert_called_once_with(1, update_data)
+        mock_service.update_exam.assert_called_once_with(1, update_data, 1)
         assert result == mock_exam_response
 
     # Grade Management Tests
@@ -509,13 +512,13 @@ class TestGradingAssessmentController:
         # Call the function
         result = await update_grade(
             grade_id=1,
-            grade_update=update_data,
+            grade_data=update_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.update_grade.assert_called_once_with(1, update_data)
+        mock_service.update_grade.assert_called_once_with(1, update_data, 1)
         assert result == mock_grade_response
     
     @patch('controllers.grading_assessment_controller.GradingAssessmentService')
@@ -538,7 +541,7 @@ class TestGradingAssessmentController:
         )
         
         # Assertions
-        mock_service.publish_grade.assert_called_once_with(1)
+        mock_service.publish_grade.assert_called_once_with(1, 1)
         assert result == mock_grade_response
 
     # Gradebook Management Tests
@@ -627,13 +630,13 @@ class TestGradingAssessmentController:
         # Call the function
         result = await update_gradebook(
             gradebook_id=1,
-            gradebook_update=update_data,
+            gradebook_data=update_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.update_gradebook.assert_called_once_with(1, update_data)
+        mock_service.update_gradebook.assert_called_once_with(1, update_data, 1)
         assert result == mock_gradebook_response
 
     # Statistics and Analytics Tests
@@ -644,6 +647,7 @@ class TestGradingAssessmentController:
         # Mock service instance
         mock_service = Mock()
         mock_statistics = GradeStatisticsResponse(
+            id=1,
             course_id=1,
             total_students=25,
             students_passing=20,
@@ -661,9 +665,10 @@ class TestGradingAssessmentController:
             assignment_average=82.0,
             exam_average=75.0,
             participation_average=85.0,
-            generated_at=datetime.now()
+            calculated_at=datetime.now(),
+            created_at=datetime.now()
         )
-        mock_service.get_grade_statistics.return_value = mock_statistics
+        mock_service.calculate_grade_statistics.return_value = mock_statistics
         mock_service_class.return_value = mock_service
         
         # Import the function
@@ -677,7 +682,10 @@ class TestGradingAssessmentController:
         )
         
         # Assertions
-        mock_service.get_grade_statistics.assert_called_once_with(1)
+        mock_service.calculate_grade_statistics.assert_called_once()
+        # Check the call arguments (ignoring Query wrapper)
+        call_args = mock_service.calculate_grade_statistics.call_args[0]
+        assert call_args[0] == 1
         assert result == mock_statistics
 
     # Bulk Operations Tests
@@ -687,36 +695,36 @@ class TestGradingAssessmentController:
         """Test bulk assignment creation"""
         # Mock service instance
         mock_service = Mock()
-        mock_service.bulk_create_assignments.return_value = [mock_assignment_response]
+        mock_service.create_bulk_assignments.return_value = [mock_assignment_response]
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.grading_assessment_controller import bulk_create_assignments
+        from controllers.grading_assessment_controller import create_bulk_assignments
         
         # Create bulk data
         bulk_data = BulkAssignmentCreate(
             course_id=1,
-            assignments=[
-                AssignmentCreate(
-                    course_id=1,
-                    title="Assignment 1",
-                    assignment_type=AssignmentType.HOMEWORK,
-                    total_points=100.0,
-                    weight_percentage=10.0,
-                    due_date=datetime(2024, 12, 31, 23, 59, 59)
-                )
-            ]
+            assignment_template=AssignmentCreate(
+                course_id=1,
+                title="Assignment Template",
+                assignment_type=AssignmentType.HOMEWORK,
+                total_points=100.0,
+                weight_percentage=10.0,
+                due_date=datetime(2024, 12, 31, 23, 59, 59)
+            ),
+            due_dates=[datetime(2024, 12, 1), datetime(2024, 12, 15)],
+            titles=["Assignment 1", "Assignment 2"]
         )
         
         # Call the function
-        result = await bulk_create_assignments(
+        result = await create_bulk_assignments(
             bulk_data=bulk_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.bulk_create_assignments.assert_called_once_with(bulk_data, 1)
+        mock_service.create_bulk_assignments.assert_called_once_with(bulk_data, 1)
         assert result == [mock_assignment_response]
     
     @patch('controllers.grading_assessment_controller.GradingAssessmentService')
@@ -725,37 +733,31 @@ class TestGradingAssessmentController:
         """Test bulk grade creation"""
         # Mock service instance
         mock_service = Mock()
-        mock_service.bulk_create_grades.return_value = [mock_grade_response]
+        mock_service.create_bulk_grades.return_value = [mock_grade_response]
         mock_service_class.return_value = mock_service
         
         # Import the function
-        from controllers.grading_assessment_controller import bulk_create_grades
+        from controllers.grading_assessment_controller import create_bulk_grades
         
         # Create bulk data
         bulk_data = BulkGradeCreate(
             course_id=1,
+            assignment_id=1,
             grades=[
-                GradeCreate(
-                    student_id=1,
-                    course_id=1,
-                    points_earned=85.0,
-                    points_possible=100.0,
-                    percentage=85.0,
-                    letter_grade="B",
-                    grade_status=GradeStatus.PUBLISHED
-                )
+                {"student_id": 1, "points_earned": 85.0, "comments": "Good work"},
+                {"student_id": 2, "points_earned": 90.0, "comments": "Excellent"}
             ]
         )
         
         # Call the function
-        result = await bulk_create_grades(
+        result = await create_bulk_grades(
             bulk_data=bulk_data,
             current_professor=mock_professor,
             db=mock_db
         )
         
         # Assertions
-        mock_service.bulk_create_grades.assert_called_once_with(bulk_data, 1)
+        mock_service.create_bulk_grades.assert_called_once_with(bulk_data, 1)
         assert result == [mock_grade_response]
 
 if __name__ == "__main__":

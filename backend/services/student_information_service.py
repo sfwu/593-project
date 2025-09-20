@@ -107,15 +107,25 @@ class StudentInformationService:
             overall_attendance_percentage = 0.0
         
         # Identify students at risk (attendance < 70%)
-        students_at_risk = [
-            {
-                "student_id": s.student_id,
-                "student_name": f"{s.student.first_name} {s.student.last_name}" if s.student else "Unknown",
-                "attendance_percentage": s.attendance_percentage,
-                "total_absences": s.absent_count
-            }
-            for s in summaries if s.attendance_percentage < 70.0
-        ]
+        students_at_risk = []
+        for s in summaries:
+            if s.attendance_percentage < 70.0:
+                if s.student:
+                    if hasattr(s.student, 'first_name'):
+                        # Object with attributes
+                        student_name = f"{s.student.first_name} {s.student.last_name}"
+                    else:
+                        # Dictionary
+                        student_name = f"{s.student.get('first_name', 'Unknown')} {s.student.get('last_name', '')}"
+                else:
+                    student_name = "Unknown"
+                
+                students_at_risk.append({
+                    "student_id": s.student_id,
+                    "student_name": student_name,
+                    "attendance_percentage": s.attendance_percentage,
+                    "total_absences": s.absent_count
+                })
         
         return AttendanceReport(
             course_id=course_id,
