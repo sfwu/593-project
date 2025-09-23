@@ -52,12 +52,31 @@ A **complete full-stack application** for academic course management with role-b
 │   │   ├── course.py                 # Course & enrollment models
 │   │   ├── academic_record.py        # Academic records & transcripts
 │   │   ├── grading_assessment.py     # Assignments, exams, grades
+│   │   ├── course_feedback.py        # Course ratings and feedback
+│   │   ├── term_config.py            # Academic term configuration
+│   │   ├── grading_policy.py         # Grading scale and policy
 │   │   └── student_information.py    # Attendance, messages, directory
 │   ├── schemas/                      # Pydantic schemas
 │   │   ├── student_schemas.py        # Core API request/response models
 │   │   ├── academic_record_schemas.py # Academic record schemas
 │   │   ├── grading_assessment_schemas.py # Grading & assessment schemas
+│   │   ├── course_feedback_schemas.py    # Course feedback schemas
+│   │   ├── admin_config_schemas.py       # Admin config schemas
 │   │   └── student_information_schemas.py # Student info schemas
+│   ├── repositories/                 # Data access layer
+│   │   ├── student_repository.py     # Student repository
+│   │   ├── academic_record_repository.py # Academic record repository
+│   │   ├── grading_assessment_repository.py # Grading assessment repository
+│   │   ├── course_feedback_repository.py   # Course feedback repository
+│   │   ├── admin_config_repository.py      # Admin config repository
+│   │   └── __init__.py
+│   ├── services/                     # Business logic layer
+│   │   ├── student_service.py        # Student service
+│   │   ├── academic_record_service.py # Academic record service
+│   │   ├── grading_assessment_service.py # Grading assessment service
+│   │   ├── course_feedback_service.py    # Course feedback service
+│   │   ├── admin_config_service.py       # Admin config service
+│   │   └── __init__.py
 │   ├── controllers/                  # API endpoints
 │   │   ├── auth_controller.py        # Authentication endpoints
 │   │   ├── student_controller.py     # Student functionality
@@ -65,6 +84,7 @@ A **complete full-stack application** for academic course management with role-b
 │   │   ├── course_controller.py      # General course endpoints
 │   │   ├── academic_record_controller.py # Academic record management
 │   │   ├── grading_assessment_controller.py # Grading & assessment
+│   │   ├── course_feedback_controller.py   # Course feedback
 │   │   └── student_information_controller.py # Student information
 │   └── main.py                       # FastAPI app with all routes
 ├── frontend/
@@ -147,6 +167,9 @@ tail -f logs/frontend.log
 - **100+ API endpoint tests** for all controllers and services
 - **Async/await implementation** fully tested and working
 - **Module-specific tests** for academic records, grading assessment, and student information
+- **Faculty Directory Search tests** for search/discovery endpoints
+- **Course Feedback tests** for ratings and feedback endpoints
+- **Admin Config tests** for academic term and grading policy management
 
 ### Running Tests
 

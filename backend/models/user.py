@@ -15,6 +15,7 @@ class UserRole(enum.Enum):
 class User(Base):
     """Base User model for authentication"""
     __tablename__ = "users"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, index=True, nullable=False)

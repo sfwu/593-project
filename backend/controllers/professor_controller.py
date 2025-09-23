@@ -421,3 +421,27 @@ async def get_course_enrollment_stats(
         "available_spots": max(0, course.max_enrollment - total_enrolled),
         "year_level_distribution": year_level_stats
     }
+
+@router.get("/directory/search", response_model=List[ProfessorResponse])
+async def search_professors(
+    name: Optional[str] = Query(None, description="Search by professor name"),
+    department: Optional[str] = Query(None, description="Filter by department"),
+    course_id: Optional[int] = Query(None, description="Filter by course"),
+    db: Session = Depends(get_db)
+):
+    """
+    Search and discover faculty directory by name, department, or course
+    """
+    query = db.query(Professor)
+    if name:
+        query = query.filter(Professor.first_name.ilike(f"%{name}%") | Professor.last_name.ilike(f"%{name}%"))
+    if department:
+        query = query.filter(Professor.department.ilike(f"%{department}%"))
+    professors = query.all()
+    result = []
+    for prof in professors:
+        prof_courses = db.query(Course).filter(Course.professor_id == prof.id).all()
+        if course_id and not any(c.id == course_id for c in prof_courses):
+            continue
+        result.append(ProfessorResponse.from_orm(prof))
+    return result

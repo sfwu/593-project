@@ -3,7 +3,7 @@ Course controller - General course endpoints with authentication
 Provides centralized course access with role-based filtering
 """
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from config.database import get_db
@@ -15,6 +15,8 @@ from schemas.student_schemas import (
     CourseWithStudents,
     StudentResponse
 )
+from schemas.course_feedback_schemas import CourseFeedbackCreate, CourseFeedbackResponse
+from services.course_feedback_service import CourseFeedbackService
 
 router = APIRouter()
 
@@ -312,3 +314,32 @@ async def get_semesters(
     """Get list of all available semesters"""
     semesters = db.query(Course.semester, Course.year).distinct().order_by(Course.year.desc(), Course.semester).all()
     return {"semesters": [{"semester": sem[0], "year": sem[1]} for sem in semesters]}
+
+@router.post("/{course_id}/feedback", response_model=CourseFeedbackResponse)
+async def submit_course_feedback(
+    course_id: int,
+    feedback: CourseFeedbackCreate = Body(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Submit course rating and feedback (students only)
+    """
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can submit feedback")
+    student = db.query(Student).filter(Student.user_id == current_user.id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student profile not found")
+    feedback.course_id = course_id
+    result = CourseFeedbackService.submit_feedback(db, student.id, feedback)
+    return result
+
+@router.get("/{course_id}/feedbacks", response_model=List[CourseFeedbackResponse])
+async def get_course_feedbacks(
+    course_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all ratings and feedback for a course
+    """
+    return CourseFeedbackService.get_course_feedbacks(db, course_id)
