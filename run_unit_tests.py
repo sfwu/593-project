@@ -5,10 +5,25 @@ Comprehensive Unit Test Runner for Academic Information Management System
 This script runs all unit tests and provides detailed coverage reports.
 It includes tests for:
 - Authentication system (JWT, password hashing)
-- Database models (User, Student, Professor, Course)
-- Pydantic schemas validation
-- API controllers (auth, student, professor)
-- Business logic and error handling
+- Database models (User, Student, Professor, Course, Academic Records, Grading Assessment, Student Information)
+- Pydantic schemas validation (all modules)
+- API controllers (auth, student, professor, course, academic record, grading assessment, student information)
+- Business logic and error handling (all modules)
+
+Available modules:
+- auth: Authentication system tests
+- models: Database model tests
+- schemas: Pydantic schema validation tests
+- auth_controller: Authentication controller tests
+- student_controller: Student controller tests
+- professor_controller: Professor controller tests
+- course_controller: Course controller tests
+- academic_record_controller: Academic record controller tests
+- academic_record_service: Academic record service tests
+- grading_assessment_controller: Grading assessment controller tests
+- grading_assessment_service: Grading assessment service tests
+- student_information_controller: Student information controller tests
+- student_information_service: Student information service tests
 
 Usage:
     python run_unit_tests.py              # Run all unit tests
@@ -80,7 +95,17 @@ def run_unit_tests(verbose=False, coverage=False, module=None):
             'schemas': 'tests/unit/test_schemas.py',
             'auth_controller': 'tests/unit/test_auth_controller.py',
             'student_controller': 'tests/unit/test_student_controller.py',
-            'professor_controller': 'tests/unit/test_professor_controller.py'
+            'professor_controller': 'tests/unit/test_professor_controller.py',
+            'course_controller': 'tests/unit/test_course_controller.py',
+            # Academic Record Module
+            'academic_record_controller': 'tests/unit/test_academic_record_controller.py',
+            'academic_record_service': 'tests/unit/test_academic_record_service.py',
+            # Grading Assessment Module
+            'grading_assessment_controller': 'tests/unit/test_grading_assessment_controller.py',
+            'grading_assessment_service': 'tests/unit/test_grading_assessment_service.py',
+            # Student Information Module
+            'student_information_controller': 'tests/unit/test_student_information_controller.py',
+            'student_information_service': 'tests/unit/test_student_information_service.py'
         }
         
         if module in module_map:
@@ -148,7 +173,11 @@ def display_test_summary():
             "Student model with profile fields",
             "Professor model with academic info",
             "Course model with enrollment limits",
-            "Model relationships and associations"
+            "Academic record models (transcript, progress, GPA)",
+            "Grading assessment models (assignments, exams, grades)",
+            "Student information models (attendance, messages, directory)",
+            "Model relationships and associations",
+            "Enum definitions and constraints"
         ]),
         ("📋 Pydantic Schemas", [
             "Authentication schemas (login, register, token)",
@@ -156,7 +185,11 @@ def display_test_summary():
             "Professor schemas (create, update, response)",
             "Course schemas (create, update, response)",
             "Enrollment schemas and validation",
-            "Email and password validation rules"
+            "Academic record schemas (transcript, progress, GPA)",
+            "Grading assessment schemas (assignments, exams, grades)",
+            "Student information schemas (attendance, messages, directory)",
+            "Email and password validation rules",
+            "Enum validation and field constraints"
         ]),
         ("🌐 API Controllers", [
             "Authentication endpoints (login, registration)",
@@ -164,14 +197,25 @@ def display_test_summary():
             "Student course search and enrollment",
             "Professor profile management",
             "Professor course administration",
-            "Enrollment management and statistics"
+            "Course management and enrollment",
+            "Academic record management and transcript generation",
+            "Grading and assessment operations",
+            "Assignment and exam management",
+            "Gradebook and statistics",
+            "Student information and attendance tracking",
+            "Student communication and messaging"
         ]),
         ("🛡️ Error Handling", [
             "Invalid credentials handling",
             "Duplicate registration prevention",
             "Course capacity validation",
             "Permission and authorization checks",
-            "Database constraint validation"
+            "Database constraint validation",
+            "Academic record validation and integrity",
+            "Grading assessment business rules",
+            "Student information data validation",
+            "File upload and processing errors",
+            "Bulk operation error handling"
         ])
     ]
     
