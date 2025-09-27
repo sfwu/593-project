@@ -528,5 +528,52 @@ class TestEnrollmentStatistics:
         assert result["year_level_distribution"]["Junior"] == 2
         assert result["year_level_distribution"]["Senior"] == 1
 
+class TestFacultyDirectorySearch:
+    """Unit tests for faculty directory search"""
+    
+    @pytest.mark.asyncio
+    async def test_search_professors_by_name(self):
+        """Test searching professors by name"""
+        from controllers.professor_controller import search_professors
+        mock_db = Mock()
+        # Mock professors
+        prof1 = Mock()
+        prof1.id = 1
+        prof1.first_name = "Alice"
+        prof1.last_name = "Smith"
+        prof1.department = "Math"
+        prof2 = Mock()
+        prof2.id = 2
+        prof2.first_name = "Bob"
+        prof2.last_name = "Jones"
+        prof2.department = "Physics"
+        mock_db.query.return_value.filter.return_value = mock_db.query.return_value
+        mock_db.query.return_value.all.return_value = [prof1, prof2]
+        # Patch ProfessorResponse.from_orm to return dict
+        with patch("controllers.professor_controller.ProfessorResponse.from_orm", side_effect=lambda p: {"id": p.id, "first_name": p.first_name, "last_name": p.last_name, "department": p.department}):
+            result = await search_professors(name="Alice", department=None, course_id=None, db=mock_db)
+            assert any(r["first_name"] == "Alice" for r in result)
+    
+    @pytest.mark.asyncio
+    async def test_search_professors_by_department(self):
+        """Test searching professors by department"""
+        from controllers.professor_controller import search_professors
+        mock_db = Mock()
+        prof1 = Mock()
+        prof1.id = 1
+        prof1.first_name = "Alice"
+        prof1.last_name = "Smith"
+        prof1.department = "Math"
+        prof2 = Mock()
+        prof2.id = 2
+        prof2.first_name = "Bob"
+        prof2.last_name = "Jones"
+        prof2.department = "Physics"
+        mock_db.query.return_value.filter.return_value = mock_db.query.return_value
+        mock_db.query.return_value.all.return_value = [prof1, prof2]
+        with patch("controllers.professor_controller.ProfessorResponse.from_orm", side_effect=lambda p: {"id": p.id, "first_name": p.first_name, "last_name": p.last_name, "department": p.department}):
+            result = await search_professors(name=None, department="Physics", course_id=None, db=mock_db)
+            assert any(r["department"] == "Physics" for r in result)
+
 if __name__ == "__main__":
     pytest.main([__file__])

@@ -2,7 +2,7 @@
 Authentication controller - Login, registration, and profile endpoints
 """
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from config.database import get_db
 from config.auth import (
@@ -24,6 +24,9 @@ from schemas.student_schemas import (
     ProfessorResponse,
     UserResponse
 )
+from schemas.admin_config_schemas import TermConfigCreate, TermConfigResponse, GradingPolicyCreate, GradingPolicyResponse
+from services.admin_config_service import AdminConfigService
+from typing import List
 
 router = APIRouter()
 
@@ -160,3 +163,41 @@ async def get_current_student_profile(current_student: Student = Depends(get_cur
 async def get_current_professor_profile(current_professor: Professor = Depends(get_current_professor)):
     """Get current professor profile (professors only)"""
     return current_professor
+
+@router.post("/admin/term", response_model=TermConfigResponse)
+async def configure_term(
+    config: TermConfigCreate = Body(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin: Configure academic terms and semesters
+    """
+    if current_user.role != UserRole.PROFESSOR:
+        raise HTTPException(status_code=403, detail="Only administrators can configure terms")
+    return AdminConfigService.configure_term(db, config)
+
+@router.get("/admin/terms", response_model=List[TermConfigResponse])
+async def get_terms(
+    db: Session = Depends(get_db)
+):
+    return AdminConfigService.get_terms(db)
+
+@router.post("/admin/grading-policy", response_model=GradingPolicyResponse)
+async def configure_grading_policy(
+    policy: GradingPolicyCreate = Body(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin: Customize grading scales and policies
+    """
+    if current_user.role != UserRole.PROFESSOR:
+        raise HTTPException(status_code=403, detail="Only administrators can configure grading policies")
+    return AdminConfigService.configure_grading_policy(db, policy)
+
+@router.get("/admin/grading-policies", response_model=List[GradingPolicyResponse])
+async def get_grading_policies(
+    db: Session = Depends(get_db)
+):
+    return AdminConfigService.get_grading_policies(db)

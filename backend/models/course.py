@@ -13,12 +13,14 @@ student_course_association = Table(
     Column('student_id', Integer, ForeignKey('students.id'), primary_key=True),
     Column('course_id', Integer, ForeignKey('courses.id'), primary_key=True),
     Column('enrollment_date', DateTime, default=func.now()),
-    Column('status', String(20), default='enrolled')  # enrolled, dropped, completed
+    Column('status', String(20), default='enrolled'),  # enrolled, dropped, completed
+    extend_existing=True
 )
 
 class Course(Base):
     """Course model"""
     __tablename__ = "courses"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
     course_code = Column(String(20), unique=True, index=True, nullable=False)
