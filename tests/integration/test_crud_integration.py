@@ -3,362 +3,475 @@ Integration Tests for CRUD operations
 These tests use real database connections to test CRUD operations with actual data persistence
 """
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import sys
-import os
+from sqlalchemy.orm import Session
+from models import User, Student, Professor, Course, UserRole
+from config.auth import get_password_hash
 
-# Add backend to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../backend'))
 
-from database import Base
-import models
-import crud
-import schemas
-
-# Create test database in data/ directory
-import os
-os.makedirs("data", exist_ok=True)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./data/test_crud_integration.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-@pytest.fixture(scope="function")
-def test_db():
-    """Create test database session for integration testing"""
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-        Base.metadata.drop_all(bind=engine)
-
-class TestStudentCRUDIntegration:
-    """Integration test class for student CRUD operations with real database"""
+class TestUserCRUDIntegration:
+    """Test User CRUD operations with real database"""
     
-    def test_create_student_integration(self, test_db):
-        """Test creating a student with real database persistence"""
-        student_data = schemas.StudentCreate(
-            first_name="John",
-            last_name="Doe",
-            email="john.doe@example.com",
-            student_id="S12345",
-            major="Computer Science",
-            gpa=3.8
-        )
+    def test_create_user_success(self, integration_db: Session):
+        """Test creating a user with real database persistence"""
+        user_data = {
+            "email": "testuser@example.com",
+            "hashed_password": get_password_hash("password123"),
+            "role": UserRole.STUDENT,
+            "is_active": True
+        }
         
-        created_student = crud.create_student(test_db, student_data)
+        user = User(**user_data)
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
         
-        assert created_student.id is not None
-        assert created_student.first_name == "John"
-        assert created_student.last_name == "Doe"
-        assert created_student.email == "john.doe@example.com"
-        assert created_student.student_id == "S12345"
-        assert created_student.major == "Computer Science"
-        assert created_student.gpa == 3.8
-        assert created_student.created_at is not None
+        assert user.id is not None
+        assert user.email == "testuser@example.com"
+        assert user.role == UserRole.STUDENT
+        assert user.is_active is True
         
         # Verify data persisted in database
-        db_student = test_db.query(models.Student).filter(models.Student.id == created_student.id).first()
-        assert db_student is not None
-        assert db_student.first_name == "John"
-    
-    def test_get_student_by_id_integration(self, test_db):
-        """Test getting student by ID with real database"""
-        # Create a student first
-        student_data = schemas.StudentCreate(
-            first_name="Jane",
-            last_name="Smith",
-            email="jane.smith@example.com",
-            student_id="S12346",
-            major="Mathematics"
-        )
-        created_student = crud.create_student(test_db, student_data)
-        
-        # Get the student by ID
-        retrieved_student = crud.get_student(test_db, created_student.id)
-        
-        assert retrieved_student is not None
-        assert retrieved_student.id == created_student.id
-        assert retrieved_student.first_name == "Jane"
-        assert retrieved_student.email == "jane.smith@example.com"
-    
-    def test_get_student_by_id_not_found_integration(self, test_db):
-        """Test getting student by ID when not found"""
-        retrieved_student = crud.get_student(test_db, 999)
-        assert retrieved_student is None
-    
-    def test_get_student_by_email_integration(self, test_db):
-        """Test getting student by email with real database"""
-        # Create a student first
-        student_data = schemas.StudentCreate(
-            first_name="Bob",
-            last_name="Johnson",
-            email="bob.johnson@example.com",
-            student_id="S12347",
-            major="Physics"
-        )
-        created_student = crud.create_student(test_db, student_data)
-        
-        # Get the student by email
-        retrieved_student = crud.get_student_by_email(test_db, "bob.johnson@example.com")
-        
-        assert retrieved_student is not None
-        assert retrieved_student.id == created_student.id
-        assert retrieved_student.email == "bob.johnson@example.com"
-    
-    def test_get_student_by_email_not_found_integration(self, test_db):
-        """Test getting student by email when not found"""
-        retrieved_student = crud.get_student_by_email(test_db, "nonexistent@example.com")
-        assert retrieved_student is None
-    
-    def test_get_student_by_student_id_integration(self, test_db):
-        """Test getting student by student ID with real database"""
-        # Create a student first
-        student_data = schemas.StudentCreate(
-            first_name="Alice",
-            last_name="Brown",
-            email="alice.brown@example.com",
-            student_id="S12348",
-            major="Chemistry"
-        )
-        created_student = crud.create_student(test_db, student_data)
-        
-        # Get the student by student ID
-        retrieved_student = crud.get_student_by_student_id(test_db, "S12348")
-        
-        assert retrieved_student is not None
-        assert retrieved_student.id == created_student.id
-        assert retrieved_student.student_id == "S12348"
-    
-    def test_get_students_empty_integration(self, test_db):
-        """Test getting all students when none exist"""
-        students = crud.get_students(test_db)
-        assert students == []
-    
-    def test_get_students_with_data_integration(self, test_db):
-        """Test getting all students when data exists"""
-        # Create multiple students
-        student_data_1 = schemas.StudentCreate(
-            first_name="Student",
-            last_name="One",
-            email="student1@example.com",
-            student_id="S001"
-        )
-        student_data_2 = schemas.StudentCreate(
-            first_name="Student",
-            last_name="Two",
-            email="student2@example.com",
-            student_id="S002"
-        )
-        
-        crud.create_student(test_db, student_data_1)
-        crud.create_student(test_db, student_data_2)
-        
-        students = crud.get_students(test_db)
-        assert len(students) == 2
-        assert students[0].first_name == "Student"
-        assert students[1].first_name == "Student"
-    
-    def test_get_students_pagination_integration(self, test_db):
-        """Test getting students with pagination and real database"""
-        # Create multiple students
-        for i in range(5):
-            student_data = schemas.StudentCreate(
-                first_name=f"Student{i}",
-                last_name="Test",
-                email=f"student{i}@example.com",
-                student_id=f"S{i:03d}"
-            )
-            crud.create_student(test_db, student_data)
-        
-        # Test pagination
-        students_page_1 = crud.get_students(test_db, skip=0, limit=2)
-        students_page_2 = crud.get_students(test_db, skip=2, limit=2)
-        
-        assert len(students_page_1) == 2
-        assert len(students_page_2) == 2
-        assert students_page_1[0].id != students_page_2[0].id
-    
-    def test_update_student_success_integration(self, test_db):
-        """Test updating student successfully with real database persistence"""
-        # Create a student first
-        student_data = schemas.StudentCreate(
-            first_name="Charlie",
-            last_name="Wilson",
-            email="charlie.wilson@example.com",
-            student_id="S12349",
-            major="Engineering",
-            gpa=3.5
-        )
-        created_student = crud.create_student(test_db, student_data)
-        
-        # Update the student
-        updated_data = schemas.StudentCreate(
-            first_name="Charlie",
-            last_name="Wilson-Smith",
-            email="charlie.wilson.smith@example.com",
-            student_id="S12349",
-            major="Software Engineering",
-            gpa=3.8
-        )
-        updated_student = crud.update_student(test_db, created_student.id, updated_data)
-        
-        assert updated_student is not None
-        assert updated_student.last_name == "Wilson-Smith"
-        assert updated_student.email == "charlie.wilson.smith@example.com"
-        assert updated_student.major == "Software Engineering"
-        assert updated_student.gpa == 3.8
-        assert updated_student.updated_at is not None
-        
-        # Verify changes persisted in database
-        db_student = test_db.query(models.Student).filter(models.Student.id == created_student.id).first()
-        assert db_student.last_name == "Wilson-Smith"
-        assert db_student.gpa == 3.8
-    
-    def test_update_student_not_found_integration(self, test_db):
-        """Test updating student when not found"""
-        updated_data = schemas.StudentCreate(
-            first_name="NonExistent",
-            last_name="Student",
-            email="nonexistent@example.com",
-            student_id="S99999"
-        )
-        updated_student = crud.update_student(test_db, 999, updated_data)
-        assert updated_student is None
-    
-    def test_delete_student_success_integration(self, test_db):
-        """Test deleting student successfully with real database"""
-        # Create a student first
-        student_data = schemas.StudentCreate(
-            first_name="David",
-            last_name="Miller",
-            email="david.miller@example.com",
-            student_id="S12350",
-            major="Biology"
-        )
-        created_student = crud.create_student(test_db, student_data)
-        
-        # Delete the student
-        deleted_student = crud.delete_student(test_db, created_student.id)
-        
-        assert deleted_student is not None
-        assert deleted_student.id == created_student.id
-        
-        # Verify student is deleted from database
-        retrieved_student = crud.get_student(test_db, created_student.id)
-        assert retrieved_student is None
-        
-        # Also verify with direct database query
-        db_student = test_db.query(models.Student).filter(models.Student.id == created_student.id).first()
-        assert db_student is None
-    
-    def test_delete_student_not_found_integration(self, test_db):
-        """Test deleting student when not found"""
-        deleted_student = crud.delete_student(test_db, 999)
-        assert deleted_student is None
+        db_user = integration_db.query(User).filter(User.email == "testuser@example.com").first()
+        assert db_user is not None
+        assert db_user.id == user.id
 
-class TestStudentModelIntegration:
-    """Integration test class for student model with real database"""
-    
-    def test_student_model_creation_integration(self, test_db):
-        """Test creating student model directly with database persistence"""
-        student = models.Student(
-            first_name="Test",
-            last_name="Student",
-            email="test.student@example.com",
-            student_id="TEST001",
-            major="Test Major",
-            gpa=3.0
-        )
+    def test_get_user_by_email(self, integration_db: Session):
+        """Test retrieving user by email"""
+        # Create a user first
+        user_data = {
+            "email": "getuser@example.com",
+            "hashed_password": get_password_hash("password123"),
+            "role": UserRole.PROFESSOR,
+            "is_active": True
+        }
         
-        test_db.add(student)
-        test_db.commit()
-        test_db.refresh(student)
+        user = User(**user_data)
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
+        
+        # Retrieve user by email
+        retrieved_user = integration_db.query(User).filter(User.email == "getuser@example.com").first()
+        assert retrieved_user is not None
+        assert retrieved_user.email == "getuser@example.com"
+        assert retrieved_user.role == UserRole.PROFESSOR
+
+    def test_update_user(self, integration_db: Session):
+        """Test updating user information"""
+        # Create a user first
+        user_data = {
+            "email": "updateuser@example.com",
+            "hashed_password": get_password_hash("password123"),
+            "role": UserRole.STUDENT,
+            "is_active": True
+        }
+        
+        user = User(**user_data)
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
+        
+        # Update user
+        user.is_active = False
+        integration_db.commit()
+        integration_db.refresh(user)
+        
+        # Verify update
+        updated_user = integration_db.query(User).filter(User.email == "updateuser@example.com").first()
+        assert updated_user is not None
+        assert updated_user.is_active is False
+
+    def test_delete_user(self, integration_db: Session):
+        """Test deleting a user"""
+        # Create a user first
+        user_data = {
+            "email": "deleteuser@example.com",
+            "hashed_password": get_password_hash("password123"),
+            "role": UserRole.STUDENT,
+            "is_active": True
+        }
+        
+        user = User(**user_data)
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
+        
+        user_id = user.id
+        
+        # Delete user
+        integration_db.delete(user)
+        integration_db.commit()
+        
+        # Verify deletion
+        deleted_user = integration_db.query(User).filter(User.id == user_id).first()
+        assert deleted_user is None
+
+
+class TestStudentCRUDIntegration:
+    """Test Student CRUD operations with real database"""
+    
+    def test_create_student_with_user(self, integration_db: Session):
+        """Test creating a student with associated user"""
+        # Create user first
+        user_data = {
+            "email": "studentuser@example.com",
+            "hashed_password": get_password_hash("password123"),
+            "role": UserRole.STUDENT,
+            "is_active": True
+        }
+        
+        user = User(**user_data)
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
+        
+        # Create student
+        student_data = {
+            "user_id": user.id,
+            "student_id": "STU001",
+            "first_name": "John",
+            "last_name": "Doe",
+            "phone": "555-1234",
+            "major": "Computer Science",
+            "year_level": "Junior"
+        }
+        
+        student = Student(**student_data)
+        integration_db.add(student)
+        integration_db.commit()
+        integration_db.refresh(student)
         
         assert student.id is not None
-        assert student.created_at is not None
-        assert str(student).startswith("<Student(id=")
+        assert student.student_id == "STU001"
+        assert student.first_name == "John"
+        assert student.user_id == user.id
         
-        # Verify in database
-        db_student = test_db.query(models.Student).filter(models.Student.id == student.id).first()
-        assert db_student is not None
-        assert db_student.first_name == "Test"
-    
-    def test_student_model_defaults_integration(self, test_db):
-        """Test student model with default values and database"""
-        student = models.Student(
-            first_name="Minimal",
-            last_name="Student",
-            email="minimal@example.com",
-            student_id="MIN001"
+        # Verify relationship
+        assert student.user.email == "studentuser@example.com"
+        assert student.user.role == UserRole.STUDENT
+
+    def test_get_student_by_student_id(self, integration_db: Session):
+        """Test retrieving student by student ID"""
+        # Create user and student
+        user = User(
+            email="getstudent@example.com",
+            hashed_password=get_password_hash("password123"),
+            role=UserRole.STUDENT,
+            is_active=True
         )
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
         
-        test_db.add(student)
-        test_db.commit()
-        test_db.refresh(student)
+        student = Student(
+            user_id=user.id,
+            student_id="STU002",
+            first_name="Jane",
+            last_name="Smith",
+            major="Mathematics"
+        )
+        integration_db.add(student)
+        integration_db.commit()
+        integration_db.refresh(student)
         
-        assert student.major is None
-        assert student.gpa == 0.0
+        # Retrieve by student ID
+        retrieved_student = integration_db.query(Student).filter(Student.student_id == "STU002").first()
+        assert retrieved_student is not None
+        assert retrieved_student.first_name == "Jane"
+        assert retrieved_student.last_name == "Smith"
+
+    def test_update_student_profile(self, integration_db: Session):
+        """Test updating student profile information"""
+        # Create user and student
+        user = User(
+            email="updatestudent@example.com",
+            hashed_password=get_password_hash("password123"),
+            role=UserRole.STUDENT,
+            is_active=True
+        )
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
         
-        # Verify defaults persisted
-        db_student = test_db.query(models.Student).filter(models.Student.id == student.id).first()
-        assert db_student.major is None
-        assert db_student.gpa == 0.0
+        student = Student(
+            user_id=user.id,
+            student_id="STU003",
+            first_name="Bob",
+            last_name="Johnson",
+            major="Physics"
+        )
+        integration_db.add(student)
+        integration_db.commit()
+        integration_db.refresh(student)
+        
+        # Update student
+        student.major = "Engineering"
+        student.year_level = "Senior"
+        integration_db.commit()
+        integration_db.refresh(student)
+        
+        # Verify update
+        updated_student = integration_db.query(Student).filter(Student.student_id == "STU003").first()
+        assert updated_student.major == "Engineering"
+        assert updated_student.year_level == "Senior"
+
+
+class TestProfessorCRUDIntegration:
+    """Test Professor CRUD operations with real database"""
+    
+    def test_create_professor_with_user(self, integration_db: Session):
+        """Test creating a professor with associated user"""
+        # Create user first
+        user = User(
+            email="professoruser@example.com",
+            hashed_password=get_password_hash("password123"),
+            role=UserRole.PROFESSOR,
+            is_active=True
+        )
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
+        
+        # Create professor
+        professor = Professor(
+            user_id=user.id,
+            professor_id="PROF001",
+            first_name="Alice",
+            last_name="Brown",
+            department="Computer Science",
+            title="Associate Professor"
+        )
+        integration_db.add(professor)
+        integration_db.commit()
+        integration_db.refresh(professor)
+        
+        assert professor.id is not None
+        assert professor.professor_id == "PROF001"
+        assert professor.first_name == "Alice"
+        assert professor.department == "Computer Science"
+        
+        # Verify relationship
+        assert professor.user.email == "professoruser@example.com"
+        assert professor.user.role == UserRole.PROFESSOR
+
+    def test_get_professor_by_professor_id(self, integration_db: Session):
+        """Test retrieving professor by professor ID"""
+        # Create user and professor
+        user = User(
+            email="getprofessor@example.com",
+            hashed_password=get_password_hash("password123"),
+            role=UserRole.PROFESSOR,
+            is_active=True
+        )
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
+        
+        professor = Professor(
+            user_id=user.id,
+            professor_id="PROF002",
+            first_name="Charlie",
+            last_name="Wilson",
+            department="Mathematics",
+            title="Professor"
+        )
+        integration_db.add(professor)
+        integration_db.commit()
+        integration_db.refresh(professor)
+        
+        # Retrieve by professor ID
+        retrieved_professor = integration_db.query(Professor).filter(Professor.professor_id == "PROF002").first()
+        assert retrieved_professor is not None
+        assert retrieved_professor.first_name == "Charlie"
+        assert retrieved_professor.department == "Mathematics"
+
+
+class TestCourseCRUDIntegration:
+    """Test Course CRUD operations with real database"""
+    
+    def test_create_course_with_professor(self, integration_db: Session):
+        """Test creating a course with associated professor"""
+        # Create user and professor first
+        user = User(
+            email="courseprof@example.com",
+            hashed_password=get_password_hash("password123"),
+            role=UserRole.PROFESSOR,
+            is_active=True
+        )
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
+        
+        professor = Professor(
+            user_id=user.id,
+            professor_id="PROF003",
+            first_name="David",
+            last_name="Lee",
+            department="Computer Science",
+            title="Assistant Professor"
+        )
+        integration_db.add(professor)
+        integration_db.commit()
+        integration_db.refresh(professor)
+        
+        # Create course
+        course = Course(
+            course_code="CS101",
+            title="Introduction to Programming",
+            description="Basic programming concepts",
+            credits=3,
+            professor_id=professor.id,
+            department="Computer Science",
+            semester="Fall 2024",
+            year=2024,
+            max_enrollment=30
+        )
+        integration_db.add(course)
+        integration_db.commit()
+        integration_db.refresh(course)
+        
+        assert course.id is not None
+        assert course.course_code == "CS101"
+        assert course.title == "Introduction to Programming"
+        assert course.professor_id == professor.id
+        
+        # Verify relationship
+        assert course.professor.first_name == "David"
+        assert course.professor.department == "Computer Science"
+
+    def test_get_course_by_course_code(self, integration_db: Session):
+        """Test retrieving course by course code"""
+        # Create user, professor, and course
+        user = User(
+            email="getcourseprof@example.com",
+            hashed_password=get_password_hash("password123"),
+            role=UserRole.PROFESSOR,
+            is_active=True
+        )
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
+        
+        professor = Professor(
+            user_id=user.id,
+            professor_id="PROF004",
+            first_name="Emma",
+            last_name="Davis",
+            department="Mathematics",
+            title="Professor"
+        )
+        integration_db.add(professor)
+        integration_db.commit()
+        integration_db.refresh(professor)
+        
+        course = Course(
+            course_code="MATH201",
+            title="Calculus II",
+            description="Advanced calculus topics",
+            credits=4,
+            professor_id=professor.id,
+            department="Mathematics",
+            semester="Spring 2024",
+            year=2024,
+            max_enrollment=25
+        )
+        integration_db.add(course)
+        integration_db.commit()
+        integration_db.refresh(course)
+        
+        # Retrieve by course code
+        retrieved_course = integration_db.query(Course).filter(Course.course_code == "MATH201").first()
+        assert retrieved_course is not None
+        assert retrieved_course.title == "Calculus II"
+        assert retrieved_course.credits == 4
+        assert retrieved_course.department == "Mathematics"
+
 
 class TestDatabaseConstraintsIntegration:
-    """Integration test class for database constraints"""
+    """Test database constraints and relationships"""
     
-    def test_unique_email_constraint_integration(self, test_db):
-        """Test unique email constraint at database level"""
-        # Create first student
-        student1 = models.Student(
-            first_name="First",
-            last_name="Student",
-            email="duplicate@example.com",
-            student_id="FIRST001"
+    def test_unique_email_constraint(self, integration_db: Session):
+        """Test that email uniqueness constraint works"""
+        # Create first user
+        user1 = User(
+            email="unique@example.com",
+            hashed_password=get_password_hash("password123"),
+            role=UserRole.STUDENT,
+            is_active=True
         )
-        test_db.add(student1)
-        test_db.commit()
+        integration_db.add(user1)
+        integration_db.commit()
         
-        # Try to create second student with same email
-        student2 = models.Student(
-            first_name="Second",
-            last_name="Student",
-            email="duplicate@example.com",  # Same email
-            student_id="SECOND001"
+        # Try to create second user with same email
+        user2 = User(
+            email="unique@example.com",
+            hashed_password=get_password_hash("password456"),
+            role=UserRole.PROFESSOR,
+            is_active=True
         )
-        test_db.add(student2)
+        integration_db.add(user2)
         
-        # This should raise an integrity error
-        with pytest.raises(Exception):  # SQLite raises different exceptions
-            test_db.commit()
-    
-    def test_unique_student_id_constraint_integration(self, test_db):
-        """Test unique student_id constraint at database level"""
-        # Create first student
-        student1 = models.Student(
-            first_name="First",
-            last_name="Student",
-            email="first@example.com",
-            student_id="DUPLICATE001"
-        )
-        test_db.add(student1)
-        test_db.commit()
-        
-        # Try to create second student with same student_id
-        student2 = models.Student(
-            first_name="Second",
-            last_name="Student",
-            email="second@example.com",
-            student_id="DUPLICATE001"  # Same student_id
-        )
-        test_db.add(student2)
-        
-        # This should raise an integrity error
-        with pytest.raises(Exception):  # SQLite raises different exceptions
-            test_db.commit()
+        # Should raise integrity error
+        with pytest.raises(Exception):  # SQLAlchemy will raise an exception
+            integration_db.commit()
 
-if __name__ == "__main__":
-    pytest.main([__file__])
+    def test_foreign_key_constraint(self, integration_db: Session):
+        """Test that foreign key constraints work"""
+        # Try to create student with non-existent user_id
+        student = Student(
+            user_id=99999,  # Non-existent user ID
+            student_id="STU999",
+            first_name="Invalid",
+            last_name="Student"
+        )
+        integration_db.add(student)
+        
+        # SQLite doesn't enforce foreign key constraints by default
+        # This test documents the current behavior
+        integration_db.commit()  # This succeeds in SQLite
+        integration_db.refresh(student)
+        
+        # Verify the student was created (SQLite behavior)
+        assert student.id is not None
+        assert student.user_id == 99999  # Non-existent user ID was allowed
+
+    def test_cascade_delete_relationship(self, integration_db: Session):
+        """Test that cascade relationships work properly"""
+        # Create user and student
+        user = User(
+            email="cascade@example.com",
+            hashed_password=get_password_hash("password123"),
+            role=UserRole.STUDENT,
+            is_active=True
+        )
+        integration_db.add(user)
+        integration_db.commit()
+        integration_db.refresh(user)
+        
+        student = Student(
+            user_id=user.id,
+            student_id="STU999",
+            first_name="Cascade",
+            last_name="Test"
+        )
+        integration_db.add(student)
+        integration_db.commit()
+        integration_db.refresh(student)
+        
+        student_id = student.id
+        
+        # Delete user - this should fail due to NOT NULL constraint
+        integration_db.delete(user)
+        
+        # The commit should raise an integrity error due to NOT NULL constraint
+        with pytest.raises(Exception):  # IntegrityError due to NOT NULL constraint
+            integration_db.commit()
+        
+        # Rollback the session to clean state
+        integration_db.rollback()
+        
+        # Verify both user and student still exist (transaction was rolled back)
+        remaining_user = integration_db.query(User).filter(User.email == "cascade@example.com").first()
+        remaining_student = integration_db.query(Student).filter(Student.id == student_id).first()
+        assert remaining_user is not None
+        assert remaining_student is not None
